@@ -28,7 +28,7 @@ int main() {
   int tmax; 	          // definisco i parametri
   int k=0, j=0;         // k è una variabile necessaria per posizionare i tempi in un array malloc, j mi aiuta nell'ordine
   long int i, steps;		// scelgo un long int per la variabile del ciclo
-  double x0, y0, z0;
+  double x0, y0, z0;		// 
   FILE *output;			    // def un puntatore per il file out
   FILE *input;
   FILE *periodo;
@@ -52,7 +52,7 @@ int main() {
 
 /****Raccolgo da input.dat le condizioni iniziali****/
   input = fopen("input.dat", "r");
-  fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %d\n", &c.a, &c.b, &c.rho, &x0, &y0, &z0, &c.dt, &tmax);
+  fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %d\n", &c.a, &c.b, &c.rho, &p.x, &p.y, &p.z, &c.dt, &tmax);
 
 /****Creo un output.dat e scrivo l'ordine dei dati****/
   output = fopen("output.dat", "w"); //iniz il file
@@ -62,10 +62,10 @@ int main() {
   periodo = fopen("perio.dat", "w");
   fprintf(periodo, "#periodo ");
 
-  //il vector p assume le variabili iniziali
-  p.x = x0;
-  p.y = y0;
-  p.z = z0;
+  //x0, y0 e z0
+  x0 = p.x;
+  y0 = p.y;
+  z0 = p.z;
 
   fprintf(output, "%.8lf %.8lf %.8lf %.8lf\n", 0., x0, y0, z0);
 
@@ -81,13 +81,12 @@ int main() {
     fprintf(output, "%.4lf %.8lf %.8lf %.8lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
 
 
-
   /****Zona del controllo periodo****/
-    if (p.x >= x0 && pold.x < x0 && p.y >= y0 && pold.y < y0) { //se periodica dovrebbe tornare al punto di partenza
+    //if (p.x <= pold.x && p.y - y0 <= y0*0.001 && p.z - z0 <= z0*0.001) { //se periodica dovrebbe tornare al punto di partenza
+    if (p.x >= x0 && pold.x <= x0 && p.y >= y0 && pold.y <= y0 && p.z >= z0 && pold.z <= z0) {
       dperiodo[k] = c.dt*((double)(i+1)); //temporaneamente metto i tempi in un array
       k++;  //conto quanti ne salvo
-      
-      /****REALLOC ZONE - in fase di costruzione****/
+      // /****REALLOC ZONE - in fase di costruzione****/
       // if (k+1 == NUM_PERIODI * (j+1)) { //k+1, prima di finire completamente la memoria ne assegno della nuova
       //   dperiodo = realloc(dperiodo, 2 * NUM_PERIODI * sizeof(double)); //raddoppio lo spazio riservato a dperiodo
       //   j++; //j mi aiuta a tenere ordinata la memoria
