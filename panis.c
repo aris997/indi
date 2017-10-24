@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define NUM_PERIODI 128
+#define NUM_PERIODI 256
 
 typedef struct vector { 	//definisco un typedef vector per un vettore nello spazio.
 	double x;
@@ -17,16 +17,16 @@ typedef struct pars {
   double dt;
 }pars;
 
-struct vector RK4(vector, pars, double);
+struct vector RK4(vector, pars);
 struct vector strcopy(vector);
 
-double f(double, double, vector, pars);
-double g(double, double, vector, pars);
-double h(double, double, vector, pars);
+double f(double, double, double, pars);
+double g(double, double, double, pars);
+double h(double, double, double, pars);
 
 int main() {
   int tmax; 	          // definisco i parametri
-  int k=0, j=0;         // k è una variabile necessaria per posizionare i tempi in un array malloc, j mi aiuta nell'ordine
+  int k=0;              // k è una variabile necessaria per posizionare i tempi in un array malloc, j mi aiuta nell'ordine
   long int i, steps;		// scelgo un long int per la variabile del ciclo
   double x0, y0, z0, dt;		// 
   FILE *output;			    // def un puntatore per il file out
@@ -85,21 +85,12 @@ int main() {
 	
 	pold = strcopy(p);  //ricopio il vettore dentro uno nuovo per poter controllare il periodo
 
-	p = RK4(p, c, (double)(i + 1) * c.dt);
+	p = RK4(p, c);
 	fprintf(output, "%.8lf %.16lf %.16lf %.16lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
 
 
   /****Zona del controllo periodo****/
-	//if (p.x <= pold.x && p.y - y0 <= y0*0.001 && p.z - z0 <= z0*0.001) { //se periodica dovrebbe tornare al punto di partenza
-	if (p.x >= x0*(1-dt*dt) && pold.x <= x0*(1+dt*dt) && p.y >= y0*(1-dt*dt) && pold.y <= y0*(1+dt*dt) && p.z >= z0*(1-dt*dt) && pold.z <= z0*(1+dt*dt)) {
-	  dperiodo[k] = c.dt*((double)(i+1)); //temporaneamente metto i tempi in un array
-	  k++;  //conto quanti ne salvo
-	  /****REALLOC ZONE - in fase di costruzione****/
-	  // if (k == NUM_PERIODI * (j+1) - 1) { //k+1, prima di finire completamente la memoria ne assegno della nuova
-	  //   dperiodo = realloc(dperiodo, 2 * NUM_PERIODI * sizeof(double)); //raddoppio lo spazio riservato a dperiodo
-	  //   j++; //j mi aiuta a tenere ordinata la memoria
-	  // }
-	}
+  if ()
   
   /****SECONDO PUNTO PARTE 1****/
 	fprintf(energy, "%.8lf %.16lf\n", c.dt*((double)(i+1)), (log(p.x) - p.x + log(p.y) - p.y + p.z));
@@ -133,36 +124,31 @@ int main() {
 
 
 
-struct vector RK4(vector n, pars c, double t) { //chiamo n il vettore così n mi richiama alla mente a che passo di int sono
-  //i passi xi, yi e zi sono le velocità
+struct vector RK4(vector n, pars c) {
   
-  double x1, x2, x3, x4;  //definisco i passi di RK4 temporanee per x
   double dt = c.dt;
 
-  x1 = f(n.x, t, n, c) * dt;
-  x2 = f(n.x + 0.5 * x1, t + 0.5 * dt, n, c) * dt;    //repetita iuvant: i passi vengono fatti per tutte e tre le dimensioni
-  x3 = f(n.x + 0.5 * x2, t + 0.5 * dt, n, c) * dt;
-  x4 = f(n.x + x3, t + dt, n, c) * dt;
+  vector p1, p2, p3, p4;
 
-  n.x += (x1 + 2.*x2 + 2.*x3 + x4)/6.;
+  p1.x = f(n.x, n.y, n.z, c) * dt;
+  p1.y = g(n.x, n.y, n.z, c) * dt;
+  p1.z = h(n.x, n.y, n.z, c) * dt;
+  
+  p2.x = f(n.x + p1.x/2., n.y + p1.y/2., n.z + p1.z/2., c) * dt;
+  p2.y = g(n.x + p1.x/2., n.y + p1.y/2., n.z + p1.z/2., c) * dt;
+  p2.z = h(n.x + p1.x/2., n.y + p1.y/2., n.z + p1.z/2., c) * dt;
+  
+  p3.x = f(n.x + p2.x/2., n.y + p2.y/2., n.z + p2.z/2., c) * dt;
+  p3.y = g(n.x + p2.x/2., n.y + p2.y/2., n.z + p2.z/2., c) * dt;
+  p3.z = h(n.x + p2.x/2., n.y + p2.y/2., n.z + p2.z/2., c) * dt;
+  
+  p4.x = f(n.x + p3.x, n.y + p3.y, n.z + p3.z, c) * dt;
+  p4.y = g(n.x + p3.x, n.y + p3.y, n.z + p3.z, c) * dt;
+  p4.z = h(n.x + p3.x, n.y + p3.y, n.z + p3.z, c) * dt;
 
-  double y1, y2, y3, y4;  //definisco i passi di RK4 temporanee per y
-
-  y1 = g(n.y, t, n, c) * dt;
-  y2 = g(n.y + 0.5 * y1, t + 0.5 * dt, n, c) * dt;
-  y3 = g(n.y + 0.5 * y2, t + 0.5 * dt, n, c) * dt;
-  y4 = g(n.y + y3, t + dt, n, c) * dt;
-
-  n.y += (y1 + 2.*y2 + 2.*y3 + y4)/6.;
-
-  double z1, z2, z3, z4;  //definisco i passi di RK4 temporanee per z
-
-  z1 = h(n.z, t, n, c) * dt;
-  z2 = h(n.z + 0.5 * z1, t + 0.5 * dt, n, c) * dt;
-  z3 = h(n.z + 0.5 * z2, t + 0.5 * dt, n, c) * dt;
-  z4 = h(n.z + z3, t + dt, n, c) * dt;
-
-  n.z += (z1 + 2.*z2 + 2.*z3 + z4)/6.;
+  n.x += (p1.x + 2.*p2.x + 2.*p3.x + p4.x)/6.;
+  n.y += (p1.y + 2.*p2.y + 2.*p3.y + p4.y)/6.;
+  n.z += (p1.z + 2.*p2.z + 2.*p3.z + p4.z)/6.;
 
   return n;
 }
@@ -171,17 +157,18 @@ struct vector RK4(vector n, pars c, double t) { //chiamo n il vettore così n mi
 
 /****LE FUNZIONI f, g e h del problema(in ordine x, y, z)****/
 
-double f(double x, double t, vector n, pars c) {
-  return x * ( c.a * (1 - n.x) + 0.5 * (1 - n.y) + c.b * (1 - n.z) );
+double f(double x, double y, double z, pars c) {
+  return x * ( c.a * (1 - x) + 0.5 * (1 - y) + c.b * (1 - z) );
 }
 
-double g(double y, double t, vector n, pars c) {
-  return y * ( -0.5 * (1 - n.x) + c.b * (n.y - n.z) );
+double g(double x, double y, double z, pars c) {
+  return y * ( -0.5 * (1 - x) + c.b * (y - z) );
 }
 
-double h(double z, double t, vector n, pars c) {
-  return z * ( c.rho * (1 - n.x) + 0.1 * (2. - n.y - n.z) );
+double h(double x, double y, double z, pars c) {
+  return z * ( c.rho * (1 - x) + 0.1 * (2. - y - z) );
 }
+
 
 
 

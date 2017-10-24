@@ -139,30 +139,39 @@ struct vector RK4(vector n, pars c, double t) { //chiamo n il vettore così n mi
   double x1, x2, x3, x4;  //definisco i passi di RK4 temporanee per x
   double dt = c.dt;
 
-  x1 = f(n.x, t, n, c) * dt;
-  x2 = f(n.x + 0.5 * x1, t + 0.5 * dt, n, c) * dt;    //repetita iuvant: i passi vengono fatti per tutte e tre le dimensioni
-  x3 = f(n.x + 0.5 * x2, t + 0.5 * dt, n, c) * dt;
-  x4 = f(n.x + x3, t + dt, n, c) * dt;
+  vector p1, p2, p3, p4;
 
-  n.x += (x1 + 2.*x2 + 2.*x3 + x4)/6.;
+  // x1 = f(n.x, n, c) * dt;
+  // y1 = g(n.y, n, c) * dt;
+  // z1 = h(n.z, n, c) * dt;
+
+  p1 = q(n.x, n.y, n.z, c) * dt;
+
+  // x2 = f(n.x + 0.5 * x1, n, c) * dt;    //repetita iuvant: i passi vengono fatti per tutte e tre le dimensioni
+  // y2 = g(n.y + 0.5 * y1, n, c) * dt;
+  // z2 = h(n.z + 0.5 * z1, n, c) * dt;
+
+  p2 = q(n.x + p1.x/2., n.y + p1.y/2., n.z + p1.z/2., c) * dt;
 
   double y1, y2, y3, y4;  //definisco i passi di RK4 temporanee per y
 
-  y1 = g(n.y, t, n, c) * dt;
-  y2 = g(n.y + 0.5 * y1, t + 0.5 * dt, n, c) * dt;
-  y3 = g(n.y + 0.5 * y2, t + 0.5 * dt, n, c) * dt;
-  y4 = g(n.y + y3, t + dt, n, c) * dt;
+  // x3 = f(n.x + 0.5 * x2, n, c) * dt;
+  // y3 = g(n.y + 0.5 * y2, n, c) * dt;
+  // z3 = h(n.z + 0.5 * z2, n, c) * dt;
 
-  n.y += (y1 + 2.*y2 + 2.*y3 + y4)/6.;
+  p3 = q(n.x + p2.x/2., n.y + p2.y/2., n.z + p2.z/2., c) * dt;
 
   double z1, z2, z3, z4;  //definisco i passi di RK4 temporanee per z
 
-  z1 = h(n.z, t, n, c) * dt;
-  z2 = h(n.z + 0.5 * z1, t + 0.5 * dt, n, c) * dt;
-  z3 = h(n.z + 0.5 * z2, t + 0.5 * dt, n, c) * dt;
-  z4 = h(n.z + z3, t + dt, n, c) * dt;
+  // x4 = f(n.x + x3, n, c) * dt;
+  // y4 = g(n.y + y3, n, c) * dt;
+  // z4 = h(n.z + z3, n, c) * dt;
 
-  n.z += (z1 + 2.*z2 + 2.*z3 + z4)/6.;
+  p4 = q(n.x + p3.x, n.y + p3.y, n.z + p3.z, c) * dt;
+
+  n.x += (p1.x + 2.*p2.x + 2.*p3.x + p4.x)/6.;
+  n.y += (p1.y + 2.*p2.y + 2.*p3.y + p4.y)/6.;
+  n.z += (p1.z + 2.*p2.z + 2.*p3.z + p4.z)/6.;
 
   return n;
 }
@@ -171,19 +180,27 @@ struct vector RK4(vector n, pars c, double t) { //chiamo n il vettore così n mi
 
 /****LE FUNZIONI f, g e h del problema(in ordine x, y, z)****/
 
-double f(double x, double t, vector n, pars c) {
+double f(double x, vector n, pars c) {
   return x * ( c.a * (1 - n.x) + 0.5 * (1 - n.y) + c.b * (1 - n.z) );
 }
 
-double g(double y, double t, vector n, pars c) {
+double g(double y, vector n, pars c) {
   return y * ( -0.5 * (1 - n.x) + c.b * (n.y - n.z) );
 }
 
-double h(double z, double t, vector n, pars c) {
+double h(double z, vector n, pars c) {
   return z * ( c.rho * (1 - n.x) + 0.1 * (2. - n.y - n.z) );
 }
 
+struct vector q(double x, double y, double z, pars c) {
+  vector p;
 
+  p.x = x * ( c.a * (1 - x) + 0.5 * (1 - y) + c.b * (1 - z) );
+  p.y = y * ( -0.5 * (1 - x) + c.b * (y - z) );
+  p.z = z * ( c.rho * (1 - x) + 0.1 * (2. - y - z) );
+
+  return p;
+}
 
 /****Utili****/
 struct vector strcopy(vector a) {
