@@ -28,11 +28,10 @@ int main() {
   int tmax; 	          // definisco i parametri
   int k=0, j=0;         // k è una variabile necessaria per posizionare i tempi in un array malloc, j mi aiuta nell'ordine
   long int i, steps;		// scelgo un long int per la variabile del ciclo
-  double x0, y0, z0, dt;		// 
+  double x0, y0, z0;		// 
   FILE *output;			    // def un puntatore per il file out
   FILE *input;
   FILE *periodo;
-  FILE *energy;
 
   double *dperiodo; //definisco delta dei periodi
 
@@ -54,7 +53,6 @@ int main() {
 /****Raccolgo da input.dat le condizioni iniziali****/
   input = fopen("input.dat", "r");
   fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %d\n", &c.a, &c.b, &c.rho, &p.x, &p.y, &p.z, &c.dt, &tmax);
-  fclose(input);
 
 /****Creo un output.dat e scrivo l'ordine dei dati****/
   output = fopen("output.dat", "w"); //iniz il file
@@ -64,11 +62,6 @@ int main() {
   periodo = fopen("perio.dat", "w");
   fprintf(periodo, "#periodo ");
 
-/**Apro un file per salvare l'energy****/
-  energy = fopen("energy.dat", "w");
-  fprintf(energy, "#C\n");
-
-
   //x0, y0 e z0
   x0 = p.x;
   y0 = p.y;
@@ -77,7 +70,7 @@ int main() {
   fprintf(output, "%.8lf %.8lf %.8lf %.8lf\n", 0., x0, y0, z0);
 
 	steps = (tmax/c.dt); //assegno a steps il numero di passi di integrazione
-  dt = c.dt;
+
 
 /****Zona principale del codice****/
 	for (i=0; i<steps; i++) {  
@@ -85,37 +78,26 @@ int main() {
     pold = strcopy(p);  //ricopio il vettore dentro uno nuovo per poter controllare il periodo
 
     p = RK4(p, c, (double)(i + 1) * c.dt);
-    fprintf(output, "%.8lf %.16lf %.16lf %.16lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
+    fprintf(output, "%.4lf %.8lf %.8lf %.8lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
 
 
   /****Zona del controllo periodo****/
     //if (p.x <= pold.x && p.y - y0 <= y0*0.001 && p.z - z0 <= z0*0.001) { //se periodica dovrebbe tornare al punto di partenza
-    if (p.x >= x0*(1-dt*dt) && pold.x <= x0*(1+dt*dt) && p.y >= y0*(1-dt*dt) && pold.y <= y0*(1+dt*dt) && p.z >= z0*(1-dt*dt) && pold.z <= z0*(1+dt*dt)) {
+    if (p.x >= x0 && pold.x <= x0 && p.y >= y0 && pold.y <= y0 && p.z >= z0 && pold.z <= z0) {
       dperiodo[k] = c.dt*((double)(i+1)); //temporaneamente metto i tempi in un array
       k++;  //conto quanti ne salvo
-      /****REALLOC ZONE - in fase di costruzione****/
-      // if (k == NUM_PERIODI * (j+1) - 1) { //k+1, prima di finire completamente la memoria ne assegno della nuova
+      // /****REALLOC ZONE - in fase di costruzione****/
+      // if (k+1 == NUM_PERIODI * (j+1)) { //k+1, prima di finire completamente la memoria ne assegno della nuova
       //   dperiodo = realloc(dperiodo, 2 * NUM_PERIODI * sizeof(double)); //raddoppio lo spazio riservato a dperiodo
       //   j++; //j mi aiuta a tenere ordinata la memoria
       // }
     }
-  
-  /****SECONDO PUNTO PARTE 1****/
-    fprintf(energy, "%.8lf %.16lf\n", c.dt*((double)(i+1)), (log(p.x) - p.x + log(p.y) - p.y + p.z));
-
 
 	}
-  fclose(output);
-
-
-
-
-
-
 
 
 /****CALCOLO E SALVATAGGIO DEL PERIODO****/
-  fprintf(periodo, "%d\n", k-1);
+  fprintf(periodo, "%d\n", k);
   
   for (i=0; i<k-1; i++) {
     fprintf(periodo, "%lf\n", dperiodo[i+1]-dperiodo[i]);
@@ -124,9 +106,10 @@ int main() {
 
 /****CONCLUSIONI****/
 
+  fclose(input);
   free(dperiodo); //heap libero
+  fclose(output);
   fclose(periodo);
-  fclose(energy);
 
 	exit(0);
 }
