@@ -25,11 +25,11 @@ double g(double, double, vector, pars);
 double h(double, double, vector, pars);
 
 int main() {
-	int tmax; 	          // definisco i parametri
+  int tmax; 	          // definisco i parametri
   int k=0, j=0;         // k è una variabile necessaria per posizionare i tempi in un array malloc, j mi aiuta nell'ordine
-	long int i, steps;		// scelgo un long int per la variabile del ciclo
+  long int i, steps;		// scelgo un long int per la variabile del ciclo
   double x0, y0, z0;
-	FILE *output;			    // def un puntatore per il file out
+  FILE *output;			    // def un puntatore per il file out
   FILE *input;
   FILE *periodo;
 
@@ -46,8 +46,8 @@ int main() {
 
   //per semplificare abbrevio i nomi delle struct	
   vector p; //p sta per posizione
-  vector pold;
-  pars c;  //c per costanti
+  vector pold; //pold mi conserva i dati ad n-1 per poter calcolare il periodo
+  pars c;  //c sta per costanti
 
 
 /****Raccolgo da input.dat le condizioni iniziali****/
@@ -146,7 +146,7 @@ struct vector RK4(vector n, pars c, double t) { //chiamo n il vettore così n mi
   z3 = h(n.z + 0.5 * z2, t + 0.5 * dt, n, c) * dt;
   z4 = h(n.z + z3, t + dt, n, c) * dt;
 
-  n.y += (z1 + 2.*z2 + 2.*z3 + z4)/6.;
+  n.z += (z1 + 2.*z2 + 2.*z3 + z4)/6.;
 
   return n;
 }
