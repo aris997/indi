@@ -54,7 +54,7 @@ int main() {
 /****Raccolgo da input.dat le condizioni iniziali****/
   input = fopen("input.dat", "r");
   fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %d\n", &c.a, &c.b, &c.rho, &p.x, &p.y, &p.z, &c.dt, &tmax);
-  fclose(input);
+
 
 /****Creo un output.dat e scrivo l'ordine dei dati****/
   output = fopen("output.dat", "w"); //iniz il file
@@ -101,18 +101,24 @@ int main() {
   fclose(output);
 
 
-  FILE *cosettero;
-
-  cosettero = fopen("cosettero.dat", "w");
-  fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %d\n", &c.a, &c.b, &c.rho, &p.x, &p.y, &p.z, &c.dt, &tmax);
+  FILE *rhovar;
+  char filename[30];
+  fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %d\n", &c.a, &c.b, &c.rho, &x0, &y0, &z0, &c.dt, &tmax);
 
   steps = (long int)(tmax/c.dt);
 
-  for (c.rho=0.75; c.rho<=1.00; c.rho+=0.05) {
+
+  for (c.rho=1.75; c.rho<=1.80; c.rho+=0.05) {
+    sprintf(filename, "rho%d.dat", (int)(c.rho*100));
+    rhovar = fopen(filename, "w");
+
+    p.x = x0;
+    p.y = y0;
+    p.z = z0;
 
     for (i=0; i<steps; i++) {
       p = RK4(p, c);
-      fprintf(cosettero, "%.4lf %.8lf %.8lf %.8lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
+      fprintf(rhovar, "%.4lf %.8lf %.8lf %.8lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
     }
   }
 
@@ -130,11 +136,11 @@ int main() {
 
 
 /****CONCLUSIONI****/
-  fclose(cosettero);
+  fclose(rhovar);
   free(dperiodo); //heap libero
   fclose(periodo);
   fclose(energy);
-
+  fclose(input);
 	exit(0);
 }
 
