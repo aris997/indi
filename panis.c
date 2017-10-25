@@ -28,7 +28,7 @@ int main() {
   int tmax; 	          // definisco i parametri
   int k=0;              // k è una variabile necessaria per posizionare i tempi in un array malloc, j mi aiuta nell'ordine
   long int i, steps;		// scelgo un long int per la variabile del ciclo
-  double x0, y0, z0, dt;		// 
+  double x0, y0, z0, dt, C;		// 
   FILE *output;			    // def un puntatore per il file out
   FILE *input;
   FILE *periodo;
@@ -47,7 +47,7 @@ int main() {
 
   //per semplificare abbrevio i nomi delle struct	
   vector p; //p sta per posizione
-  vector pold; //pold mi conserva i dati ad n-1 per poter calcolare il periodo
+  vector pold;
   pars c;  //c sta per costanti
 
 
@@ -81,24 +81,40 @@ int main() {
   dt = c.dt;
 
 /****Zona principale del codice****/
-	for (i=0; i<steps; i++) {  
-	
-	pold = strcopy(p);  //ricopio il vettore dentro uno nuovo per poter controllare il periodo
-
-	p = RK4(p, c);
-	fprintf(output, "%.8lf %.16lf %.16lf %.16lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
+	for (i=0; i<steps; i++) {
+    pold = strcopy(p);  //ricopio il vettore dentro uno nuovo per poter controllare il periodo
+    
+    p = RK4(p, c);
+    fprintf(output, "%.8lf %.16lf %.16lf %.16lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
 
 
   /****Zona del controllo periodo****/
-  if ()
+  //if ()
   
   /****SECONDO PUNTO PARTE 1****/
-	fprintf(energy, "%.8lf %.16lf\n", c.dt*((double)(i+1)), (log(p.x) - p.x + log(p.y) - p.y + p.z));
+    C = log(p.x) - p.x + log(p.y) - p.y + p.z;
+    fprintf(energy, "%.24lf\n", C);
 
 
 	}
+  
   fclose(output);
 
+
+  FILE *cosettero;
+
+  cosettero = fopen("cosettero.dat", "w");
+  fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %d\n", &c.a, &c.b, &c.rho, &p.x, &p.y, &p.z, &c.dt, &tmax);
+
+  steps = (long int)(tmax/c.dt);
+
+  for (c.rho=0.75; c.rho<=1.00; c.rho+=0.05) {
+
+    for (i=0; i<steps; i++) {
+      p = RK4(p, c);
+      fprintf(cosettero, "%.4lf %.8lf %.8lf %.8lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
+    }
+  }
 
 
 
@@ -114,7 +130,7 @@ int main() {
 
 
 /****CONCLUSIONI****/
-
+  fclose(cosettero);
   free(dperiodo); //heap libero
   fclose(periodo);
   fclose(energy);
