@@ -71,7 +71,7 @@ int main() {
     C = log(p.x) - p.x + log(p.y) - p.y + p.z;
     fprintf(cost, "%.14lf\n", C);
 
-    if ( (double)i*dt == 10.) {
+    if ( (double)i*c.dt == 10.) {
       
     }
 	}

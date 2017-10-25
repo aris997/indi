@@ -1,39 +1,18 @@
-set term x11 persist
-set multiplot
-plot 'rho180.dat' u 1:4 w l
-replot 'rho175.dat' u 1:4 w l
-replot 'rho170.dat' u 1:4 w l
-replot 'rho165.dat' u 1:4 w l
-replot 'rho160.dat' u 1:4 w l
-replot 'rho155.dat' u 1:4 w l
-replot 'rho150.dat' u 1:4 w l
-replot 'rho145.dat' u 1:4 w l
-replot 'rho140.dat' u 1:4 w l
-replot 'rho135.dat' u 1:4 w l
-replot 'rho130.dat' u 1:4 w l
-replot 'rho125.dat' u 1:4 w l
-replot 'rho120.dat' u 1:4 w l
-replot 'rho115.dat' u 1:4 w l
-replot 'rho110.dat' u 1:4 w l
-replot 'rho105.dat' u 1:4 w l
-replot 'rho100.dat' u 1:4 w l
-replot 'rho95.dat' u 1:4 w l
-replot 'rho90.dat' u 1:4 w l
-replot 'rho85.dat' u 1:4 w l
-replot 'rho80.dat' u 1:4 w l
-replot 'rho75.dat' u 1:4 w l
-replot 'rho70.dat' u 1:4 w l
-replot 'rho65.dat' u 1:4 w l
-replot 'rho60.dat' u 1:4 w l
-replot 'rho55.dat' u 1:4 w l
-replot 'rho50.dat' u 1:4 w l
-replot 'rho45.dat' u 1:4 w l
-replot 'rho40.dat' u 1:4 w l
-replot 'rho35.dat' u 1:4 w l
-replot 'rho30.dat' u 1:4 w l
-replot 'rho25.dat' u 1:4 w l
-replot 'rho20.dat' u 1:4 w l
-replot 'rho15.dat' u 1:4 w l
-replot 'rho10.dat' u 1:4 w l
-replot 'rho05.dat' u 1:4 w l
-replot 'rho0.dat' u 1:4 w l
+set term x11 persist //questo sceglie il terminale (nel caso di mac aqua o xorg quello che usate)
+
+set xrange [9.95:10.05] //con questo date un range (basta fare yrange o zrange)
+
+set multiplot	//attiva la modalità per sovrapporre grafici (se il range è definito non ci sono problemi di sovrapposizione)
+
+
+plot 'output.dat' u 1:2 w p //plot regolare con utilizzo delle colonne 1 e 2 with lines
+
+//in alternativa si possono scegliere i punti con il lessico "w p" (with points)
+
+unset multiplot //disattiva la modalità multiplot
+
+replot //si può usare sia con splot che con plot
+
+plot '< tail -n 20000 out.dat' u 2:3  w l //prende le ultime 20000 righe del file out.dat e plotta la seconda e terza colonna con delle linee (non sono sicuro funzioni su mac, vale la pena tentare)
+
+plot 'output.dat' u 1:2 with points
