@@ -1,5 +1,5 @@
 set term x11 persist
-set multiplot persist
+set multiplot
 plot 'rho180.dat' u 1:4 w l
 replot 'rho175.dat' u 1:4 w l
 replot 'rho170.dat' u 1:4 w l

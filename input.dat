@@ -1,7 +1,7 @@
-0. 0. 0.2 1.2 0.5 0. 0.01 50
-0.5 0.1 0. 1.2 0.5 0.3 0.01 20
-#a b rho x0 y0 z0 dt tmax
+0.0 0.0 0.20 1.2 0.5 0.0 1. 1000
+0.5 0.1 0.75 1.2 0.5 0.3 0.01 50
+0.5 0.1 1.00 1.2 0.5 0.3 0.01 50
+#a  b   rho  x0  y0  z0  dt   tmax
 #
 #dati e condizioni iniziali LabFisComp AA1718 PPani
-##ATTENZIONE NON HA SENSO USARE UN dt MINORE DI 10^-4, RK4 PERDE DI SIGNIFICATO##
 #RR
