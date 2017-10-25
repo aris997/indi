@@ -107,9 +107,14 @@ int main() {
 
   steps = (long int)(tmax/c.dt);
 
-
-  for (c.rho=1.75; c.rho<=1.80; c.rho+=0.05) {
-    sprintf(filename, "rho%d.dat", (int)(c.rho*100));
+  int blob;
+  for (c.rho=0.00; c.rho<2.00; c.rho+=0.05) {
+    blob = (int)(c.rho*100.);
+    if (blob%5 != 0) {
+      blob = 5.*((c.rho/5.) * 100. );
+    }
+    sprintf(filename, "rho%d.dat", blob);
+    printf("%.2lf ", (c.rho));
     rhovar = fopen(filename, "w");
 
     p.x = x0;
