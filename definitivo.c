@@ -25,7 +25,6 @@ double g(double, double, double, pars);
 double h(double, double, double, pars);
 
 int asintotico(vector, vector, pars);
-int check(vector, vector, double, double, double, double);
 
 int main(int argv, char *argc[]) {
 
@@ -84,11 +83,11 @@ int main(int argv, char *argc[]) {
 			fprintf(piripicchio, "%.48lf \n", C/Co - 1);
 		}
 
-		if (check(pold, p, e, x0, y0, z0) == 1) {
-			dperiodo[k] = (double)i*c.dt;
-			printf("%lf %lf %lf\n", pold.x, p.x, (double)i*c.dt);
-			k++;
-		}
+		// if () {
+		// 	dperiodo[k] = (double)i*c.dt;
+		// 	printf("%lf %lf %lf\n", pold.x, p.x, (double)i*c.dt);
+		// 	k++;
+		// }
 	}
 	
 
@@ -130,7 +129,7 @@ int main(int argv, char *argc[]) {
 	}
 
 
-
+	fclose(periodo);
 
 	FILE *drastico;
 	FILE *gpscript;
@@ -144,46 +143,58 @@ int main(int argv, char *argc[]) {
 	y0 = 0.5;
 	z0 = 0.3;
 	c.dt = 0.1;
-	tmax = 400;
+	tmax = 800;
 	k = 0;
 	//As = 0;
 	e = c.dt/2.;
 	int width = 3;
+	vector S;
 
 	steps = (long int)(tmax/c.dt);
 	//printf("%ld\n", steps);
 
-	for (c.rho=1.200; c.rho<=1.500; c.rho+=0.003)  {
 
-		sprintf(filename, "drast%0*d.dat", width, k);
-		fprintf(gpscript, " '%s' every ::3000::4000 u 1:4 w l\nreplot", filename);
+	for (j=0; j<=100; j++)  { //100 passi per arrivare da 1.2 a 1.5 rho
+
+
+		c.rho = 1.2;
+		c.rho += 0.003*(double)j; //incremento dell'1% dell'intervallo
+
+		sprintf(filename, "cambiamento_drast_rho%0*d.dat", width, j);
+		fprintf(gpscript, " '%s' every ::5000::8000 u 1:4 w l\nreplot", filename);
 		drastico = fopen(filename, "w");
 
+		sprintf(filename, "periodo_drast_rho%0*d.dat", width, j);
+		//completare la scrittura dello script gp
+		periodo = fopen(filename, "w");
 		//printf("%lf \n", c.rho);
 
 		p.x = x0;
 		p.y = y0;
 		p.z = z0;
 
-		for (i = 0; i<=steps; i++) {
+		for (i = 0; i<=steps; i++) { //steps dovrebbe essere 8000
 
 			pold = strcopy(p);
 
 			p = RK4(p, c);
-			fprintf(drastico, "%.8lf %.16lf %.16lf %.16lf\n", (double)i*c.dt, p.x, p.y, p.z);
-			
-			if (check(pold, p, e, x0, y0, z0) == 1) {
-				printf("%.52lf %d\n", (double)(i*c.dt), k);
-				k++;
+
+			//if (i%200 == 0) printf("%.8lf %.16lf %.16lf %.16lf ", (double)i*c.dt, p.x, p.y, p.z);
+			if (i == 4000) S = strcopy(p);
+			if (i > 4000) {
+				fprintf(drastico, "%.8lf %.16lf %.16lf %.16lf\n", (double)i*c.dt, p.x, p.y, p.z);
+				if (e >= fabs(p.x - S.x) && e >= fabs(p.y - S.y) && e >= fabs(p.z - S.z)) {
+					fprintf(periodo, "%s\n", );
+				}
 			}
 
+			
 			//As += asintotico(pold, p, c);
 			//if (As == 10000) { i = steps; printf("%lf esiste asintoto\n", c.rho); }
 		}
 
 		fclose(drastico);
 
-		k++;
 	}
 
 
@@ -257,13 +268,4 @@ struct vector strcopy(vector a) {
 	new.z = a.z;
 
 	return new;
-}
-
-int check(vector pold, vector p, double e, double x0, double y0, double z0) {
-	
-	if ( pold.x - p.x < 0 && p.x >= x0 - e && p.x <= x0 + e && p.y >= y0 - e && p.y <= y0 + e && p.z >= z0 - e && p.z <= z0 + e ) {
-		return 1;
-	}
-
-	else return 0;
 }
