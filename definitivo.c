@@ -125,15 +125,16 @@ int main(int argv, char *argc[]) {
 	x0 = 1.2;
 	y0 = 0.5;
 	z0 = 0.3;
-	c.dt = 0.05;
-	tmax = 50;
+	c.dt = 0.01;
+	tmax = 10000;
 	k = 0;
 
 
 	steps = (int)(tmax/c.dt);
 
-	for (c.rho=1.200; c.rho<=1.500; c.rho+=0.003)  {
+	//for (c.rho=1.200; c.rho<=1.500; c.rho+=0.003)  {
 
+		c.rho = 15.;
 		sprintf(filename, "drast%d.dat", k);
 		drastico = fopen(filename, "w");
 
@@ -150,7 +151,7 @@ int main(int argv, char *argc[]) {
 		}
 
 		k++;
-	}
+	//}
 
 
 
