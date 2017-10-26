@@ -25,6 +25,7 @@ double g(double, double, double, pars);
 double h(double, double, double, pars);
 
 int asintotico(vector, vector, pars);
+int check(vector, vector, double, double, double, double);
 
 int main(int argv, char *argc[]) {
 
@@ -80,10 +81,10 @@ int main(int argv, char *argc[]) {
 
 		if ( (double)i*c.dt == 10.) {
 			printf("%.52lf ", C/Co - 1);
-			//fprintf(piripicchio, "%.48lf \n", C/Co - 1);
+			fprintf(piripicchio, "%.48lf \n", C/Co - 1);
 		}
 
-		if (pold.x - p.x < 0 && p.x >= x0 - e && p.x <= x0 + e && pold.y - p.y < 0 && p.y >= y0 - e && p.y <= y0 + e && pold.z - p.z < 0 && p.z >= z0 - e && p.z <= z0 + e) {
+		if (check(pold, p, e, x0, y0, z0) == 1) {
 			dperiodo[k] = (double)i*c.dt;
 			printf("%lf %lf %lf\n", pold.x, p.x, (double)i*c.dt);
 			k++;
@@ -111,7 +112,7 @@ int main(int argv, char *argc[]) {
 			fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %d\n", &c.a, &c.b, &c.rho, &x0, &y0, &z0, &c.dt, &tmax);
 			sprintf(filename, "rho%d.dat", (int)(c.rho*100.));
 
-			printf("%d ", (int)(c.rho*100.));
+			//printf("%d ", (int)(c.rho*100.));
 
 			rho_variable = fopen(filename, "w");
 
@@ -135,7 +136,7 @@ int main(int argv, char *argc[]) {
 	FILE *gpscript;
 
 	gpscript = fopen("mscript.gp", "w");
-	fprintf(gpscript, "set term x11 persist\nset multiplot\nunset autoscale\nset yrange [0:4]\nset xrange [300:400]\nplot");
+	fprintf(gpscript, "set term x11 persist\nset multiplot\nunset autoscale\nset yrange [0.5:8]\nset xrange [200:400]\nunset key\nplot");
 
 	c.a = 0.5;
 	c.b = 0.1;
@@ -150,7 +151,7 @@ int main(int argv, char *argc[]) {
 	int width = 3;
 
 	steps = (long int)(tmax/c.dt);
-	printf("%ld\n", steps);
+	//printf("%ld\n", steps);
 
 	for (c.rho=1.200; c.rho<=1.500; c.rho+=0.003)  {
 
@@ -158,7 +159,7 @@ int main(int argv, char *argc[]) {
 		fprintf(gpscript, " '%s' every ::3000::4000 u 1:4 w l\nreplot", filename);
 		drastico = fopen(filename, "w");
 
-		printf("%lf \n", c.rho);
+		//printf("%lf \n", c.rho);
 
 		p.x = x0;
 		p.y = y0;
@@ -171,8 +172,8 @@ int main(int argv, char *argc[]) {
 			p = RK4(p, c);
 			fprintf(drastico, "%.8lf %.16lf %.16lf %.16lf\n", (double)i*c.dt, p.x, p.y, p.z);
 			
-			if (pold.x - p.x < 0 && p.x >= x0 - e && p.x <= x0 + e && pold.y - p.y < 0 && p.y >= y0 - e && p.y <= y0 + e && pold.z - p.z < 0 && p.z >= z0 - e && p.z <= z0 + e) {
-				printf("%lf\n", (double)i*c.dt);
+			if (check(pold, p, e, x0, y0, z0) == 1) {
+				printf("%.52lf %d\n", (double)(i*c.dt), k);
 				k++;
 			}
 
@@ -191,6 +192,7 @@ int main(int argv, char *argc[]) {
 	fclose(input);
 	fclose(output);
 	fclose(piripicchio);
+
 	exit(0);
 }
 
@@ -255,4 +257,13 @@ struct vector strcopy(vector a) {
 	new.z = a.z;
 
 	return new;
+}
+
+int check(vector pold, vector p, double e, double x0, double y0, double z0) {
+	
+	if ( pold.x - p.x < 0 && p.x >= x0 - e && p.x <= x0 + e && p.y >= y0 - e && p.y <= y0 + e && p.z >= z0 - e && p.z <= z0 + e ) {
+		return 1;
+	}
+
+	else return 0;
 }
