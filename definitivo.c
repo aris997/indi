@@ -30,7 +30,7 @@ int main(int argv, char *argc[]) {
 
 	int tmax, k=0, j=0;
 	long int i, steps;
-	double x0, y0, z0, C, Co;
+	double x0, y0, z0, C, Co, e, per;
 	double dperiodo[256];
 
 	FILE *output;
@@ -38,7 +38,7 @@ int main(int argv, char *argc[]) {
 	FILE *periodo;
 	FILE *cost;
 
-	vector p;
+	vector p, pold;
 	pars c;
 
 	input = fopen("input.dat", "r");
@@ -48,7 +48,7 @@ int main(int argv, char *argc[]) {
 	fprintf(output, "#t x y z\n");
 
 	periodo = fopen("perio.dat", "w");
-	fprintf(periodo, "#periodo ");
+	fprintf(periodo, "#periodo\n");
 
 	cost = fopen("costante.dat", "w");
 	fprintf(cost, "#Costante\n");
@@ -56,6 +56,8 @@ int main(int argv, char *argc[]) {
 	x0 = p.x;
 	y0 = p.y;
 	z0 = p.z;
+
+	e = c.dt/2.;
 
 	fprintf(output, "%.8lf %.8lf %.8lf %.8lf\n", 0., x0, y0, z0);
 
@@ -65,22 +67,29 @@ int main(int argv, char *argc[]) {
 
 	for (i=0; i<steps; i++) {
 
+		pold = strcopy(p);
 
 		p = RK4(p, c);
 		fprintf(output, "%.8lf %.16lf %.16lf %.16lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
 
 		C = log(p.x) - p.x + log(p.y) - p.y + p.z;
-		fprintf(cost, "%.14lf\n", C);
+		fprintf(cost, "%lf %.32lf\n", (double)i*c.dt, C);
 
 		if ( (double)i*c.dt == 10.) {
 			printf("%.48lf ", C/Co - 1);
 		}
+
+		if (pold.x - p.x < 0 && p.x >= x0 - e && p.x <= x0 + e && pold.y - p.y < 0 && p.y >= y0 - e && p.y <= y0 + e && pold.z - p.z < 0 && p.z >= z0 - e && p.z <= z0 + e) {
+			dperiodo[k] = (double)i*c.dt;
+			printf("%lf %lf %lf\n", pold.x, p.x, (double)i*c.dt);
+			k++;
+		}
 	}
 	
 
-	fprintf(periodo, "%d\n", k-1);
 	for (i=0; i<k-1; i++) {
-		fprintf(periodo, "%lf\n", dperiodo[i+1]-dperiodo[i]);
+		per = dperiodo[i+1]-dperiodo[i];
+		if (per > c.dt*100.) fprintf(periodo, "%lf\n", dperiodo[i+1]-dperiodo[i]); //eseguo una pulizia dati
 	}
 
 
@@ -126,7 +135,7 @@ int main(int argv, char *argc[]) {
 	y0 = 0.5;
 	z0 = 0.3;
 	c.dt = 0.01;
-	tmax = 10000;
+	tmax = 13;
 	k = 0;
 
 
@@ -144,7 +153,7 @@ int main(int argv, char *argc[]) {
 		p.y = y0;
 		p.z = z0;
 
-		for (i = 0; i<steps; i++) {
+		for (i = 0; i<=steps; i++) {
 
 			p = RK4(p, c);
 			fprintf(drastico, "%.8lf %.16lf %.16lf %.16lf\n", (double)i*c.dt, p.x, p.y, p.z);
