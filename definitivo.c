@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define NUM_PERIODI 256
+#define NUM_PERIODI 64
 
 typedef struct vector {
 		double x;
@@ -19,27 +19,34 @@ typedef struct pars {
 
 struct vector RK4(vector, pars);
 struct vector strcopy(vector);
+struct vector intorno(vector, vector);
 
 double f(double, double, double, pars);
 double g(double, double, double, pars);
 double h(double, double, double, pars);
 
-int asintotico(vector, vector, pars);
 
 int main(int argv, char *argc[]) {
 
-	int tmax, k=0, j=0;
+	int tmax, k, kstop, j, width;
 	long int i, steps;
-	double x0, y0, z0, C, Co, e, per;
-	double dperiodo[256];
+	double x0, y0, z0, C, Co, per, Hstep;
+  char filename[30];
+	
+  double *dperiodo;
 
 	FILE *output;
 	FILE *input;
 	FILE *periodo;
 	FILE *cost;
-	FILE *piripicchio;
-
-	vector p, pold;
+	//FILE *piripicchio;
+  FILE *rho_variable;
+  //FILE *drastico;
+  FILE *gpscript;
+	
+  vector p, pold;
+  vector S, Sold;
+  vector e;
 	pars c;
 
 	input = fopen("input.dat", "r");
@@ -52,72 +59,90 @@ int main(int argv, char *argc[]) {
 	fprintf(periodo, "#periodo\n");
 
 	cost = fopen("costante.dat", "w");
-	fprintf(cost, "#Costante\n");
+	//fprintf(cost, "#Costante\n");
 
-	piripicchio = fopen("piripicchio.dat", "w");
+	//piripicchio = fopen("piripicchio.dat", "w");
 
-	x0 = p.x;
-	y0 = p.y;
-	z0 = p.z;
+	x0 = p.x; y0 = p.y;	z0 = p.z;
 
-	e = c.dt/2.;
+  k=0; kstop = NUM_PERIODI; j=0;
+
+  width = 3;
 
 	fprintf(output, "%.8lf %.8lf %.8lf %.8lf\n", 0., x0, y0, z0);
 
 	Co = log(x0) - x0 + log(y0) - y0;
 
-	steps = (tmax/c.dt);
+	steps = (long int)(tmax/c.dt);
+
+  dperiodo = (double *) malloc(NUM_PERIODI * sizeof(double));
+  if ( dperiodo == NULL ) {printf("malloc error\n"); exit(-1);}
+  else dperiodo = (double *) calloc(NUM_PERIODI, sizeof(double));
+
+  Hstep = steps/2;
+
+
+
 
 	for (i=0; i<steps; i++) {
 
 		pold = strcopy(p);
 
 		p = RK4(p, c);
-		fprintf(output, "%.8lf %.16lf %.16lf %.16lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
+		//fprintf(output, "%.8lf %.14lf %.14lf %.14lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
 
 		C = log(p.x) - p.x + log(p.y) - p.y + p.z;
-		fprintf(cost, "%lf %.16lf\n", (double)i*c.dt, C);
+		//fprintf(cost, "%.14lf\n", C);
+    //printf("%.14lf %.14lf\n", C, Co);
 
-		if ( (double)i*c.dt == 10.) {
-			printf("%.52lf ", C/Co - 1);
-			fprintf(piripicchio, "%.48lf \n", C/Co - 1);
+    if ( i == Hstep ) { S = strcopy(p); Sold = strcopy(pold); e = intorno(S, Sold); }
+
+		if ( e.x >= fabs(p.x - S.x) && e.y >= fabs(p.y - S.y) && e.z >= fabs(p.z - S.z) ) {
+			if (e.x >= fabs(pold.x - Sold.x) && e.y >= fabs(pold.y - Sold.y) && e.z >= fabs(pold.z - Sold.z) ) {
+        dperiodo[k] = (double)i*c.dt;
+        k++;
+        printf("%d\t", k);
+        //printf("%d\t%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf ", k, Sold.x, S.x, pold.x, p.x, Sold.y, S.y, pold.y, p.y, Sold.z, S.z, pold.z, p.z, (double)i*c.dt);
+        if (k > 1) printf("%.8lf", dperiodo[k-1] - dperiodo[k-2]);
+        printf("\n");
+//        printf("%d %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf\n", k, Sold.x, S.x, pold.x, p.x, Sold.y, S.y, pold.y, p.y, Sold.z, S.z, pold.z, p.z, (double)i*c.dt);
+        if (k == (kstop - 4) ) { dperiodo = (double *) realloc( dperiodo, 2 * kstop * sizeof(double)); kstop *= 2; printf("reallocated dperiod memory\n");}
+      }
 		}
-
-		// if () {
-		// 	dperiodo[k] = (double)i*c.dt;
-		// 	printf("%lf %lf %lf\n", pold.x, p.x, (double)i*c.dt);
-		// 	k++;
-		// }
-	}
-	
-
-	for (i=0; i<k-1; i++) {
-		per = dperiodo[i+1]-dperiodo[i];
-		if (per > c.dt*100.) fprintf(periodo, "%lf\n", dperiodo[i+1]-dperiodo[i]); //eseguo una pulizia dati
 	}
 
 
 
+/****ricalcolo il moto fino a 10.t variando il dt****/
+  for (c.dt=1.; c.dt>=0.0001; c.dt/=2.) {
+    
+    p.x = x0;
+    p.y = y0;
+    p.z = z0;
+    
+    for (i=0; i<steps; i++) { p = RK4(p, c); }
+    C = log(p.x) - p.x + log(p.y) - p.y + p.z;
+    printf("%.14lf %.14lf %.14lf %.24lf\n", p.x, p.y, p.z, C);
+    fprintf(cost, "%.14lf %.52lf\n", c.dt, C);
+  }
 
-
-	FILE *rho_variable;
-	char filename[30];
-
-	steps = (long int)(tmax/c.dt);
+/*
 
 
 	for (j=0; j<2; j++) {
 
-			fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %d\n", &c.a, &c.b, &c.rho, &x0, &y0, &z0, &c.dt, &tmax);
-			sprintf(filename, "rho%d.dat", (int)(c.rho*100.));
+		fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %d\n", &c.a, &c.b, &c.rho, &x0, &y0, &z0, &c.dt, &tmax);
+		sprintf(filename, "rho%d.dat", (int)(c.rho*100.));
 
-			//printf("%d ", (int)(c.rho*100.));
+		//printf("%d ", (int)(c.rho*100.));
 
-			rho_variable = fopen(filename, "w");
+		rho_variable = fopen(filename, "w");
 
-			p.x = x0;
-			p.y = y0;
+		p.x = x0;
+		p.y = y0;
 		p.z = z0;
+
+    steps = (long int)(tmax/c.dt);
 
 		for (i=0; i<steps; i++) {
 			p = RK4(p, c);
@@ -131,12 +156,16 @@ int main(int argv, char *argc[]) {
 
 	fclose(periodo);
 
-	FILE *drastico;
-	FILE *gpscript;
+
 
 	gpscript = fopen("mscript.gp", "w");
 	fprintf(gpscript, "set term x11 persist\nset multiplot\nunset autoscale\nset yrange [0.5:8]\nset xrange [200:400]\nunset key\nplot");
 
+
+
+
+/****RIORDINARE QUESTA SEZIONE (RIGUARDA LA PARTE 2)****/
+  /*
 	c.a = 0.5;
 	c.b = 0.1;
 	x0 = 1.2;
@@ -147,27 +176,24 @@ int main(int argv, char *argc[]) {
 	k = 0;
 	//As = 0;
 	e = c.dt/2.;
-	int width = 3;
-	vector S;
 
 	steps = (long int)(tmax/c.dt);
-	//printf("%ld\n", steps);
 
 
 	for (j=0; j<=100; j++)  { //100 passi per arrivare da 1.2 a 1.5 rho
 
 
-		c.rho = 1.2;
+		c.rho = 1.197;
 		c.rho += 0.003*(double)j; //incremento dell'1% dell'intervallo
 
-		sprintf(filename, "cambiamento_drast_rho%0*d.dat", width, j);
-		fprintf(gpscript, " '%s' every ::5000::8000 u 1:4 w l\nreplot", filename);
-		drastico = fopen(filename, "w");
+		//sprintf(filename, "cambiamento_drast_rho%0*d.dat", width, j);
+		// fprintf(gpscript, " '%s' every ::5000::8000 u 1:4 w l\nreplot", filename);
+		// drastico = fopen(filename, "w");
 
-		sprintf(filename, "periodo_drast_rho%0*d.dat", width, j);
-		//completare la scrittura dello script gp
+		sprintf(filename, "peridi.dat");
+		// //completare la scrittura dello script gp
 		periodo = fopen(filename, "w");
-		//printf("%lf \n", c.rho);
+		fprintf(periodo, "%lf ", c.rho);
 
 		p.x = x0;
 		p.y = y0;
@@ -179,12 +205,13 @@ int main(int argv, char *argc[]) {
 
 			p = RK4(p, c);
 
-			//if (i%200 == 0) printf("%.8lf %.16lf %.16lf %.16lf ", (double)i*c.dt, p.x, p.y, p.z);
-			if (i == 4000) S = strcopy(p);
+			if (i == 4000) { Sold = strcopy(pold); S = strcopy(p); }
 			if (i > 4000) {
-				fprintf(drastico, "%.8lf %.16lf %.16lf %.16lf\n", (double)i*c.dt, p.x, p.y, p.z);
-				if (e >= fabs(p.x - S.x) && e >= fabs(p.y - S.y) && e >= fabs(p.z - S.z)) {
-					fprintf(periodo, "%s\n", );
+				//fprintf(drastico, "%.8lf %.14lf %.14lf %.14lf\n", (double)i*c.dt, p.x, p.y, p.z);
+				if (e >= fabs(p.x - S.x) && e >= fabs(p.y - S.y) && e >= fabs(p.z - S.z) ) {
+          if (e >= fabs(pold.x - Sold.x) && e >= fabs(pold.y - Sold.y) && e >= fabs(pold.z - Sold.z) ) {
+            
+          }
 				}
 			}
 
@@ -197,20 +224,14 @@ int main(int argv, char *argc[]) {
 
 	}
 
-
-	fclose(periodo);
+*/
+	//fclose(periodo);
 	fclose(cost);
 	fclose(input);
 	fclose(output);
-	fclose(piripicchio);
+	//fclose(piripicchio);
 
 	exit(0);
-}
-
-
-int asintotico(vector pold, vector p, pars c) {
-
-	return 1;
 }
 
 
@@ -268,4 +289,14 @@ struct vector strcopy(vector a) {
 	new.z = a.z;
 
 	return new;
+}
+
+struct vector intorno(vector S, vector Sold) {
+  vector e;
+
+  e.x = fabs((S.x-Sold.x)/2.);
+  e.y = fabs((S.y-Sold.y)/2.);
+  e.z = fabs((S.z-Sold.z)/2.);
+
+  return e;
 }
