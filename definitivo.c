@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define NUM_PERIODI 32
+#define NUM_PERIODI 16
 
 typedef struct vector {
 		double x;
@@ -28,7 +28,7 @@ double h(double, double, double, pars);
 
 int main(int argv, char *argc[]) {
 
-	int tmax, k, kstop, j, width;
+	int tmax, k, kstop, j, width, l;
 	long int i, steps;
 	double x0, y0, z0;
   double C, Co, Hstep;
@@ -85,13 +85,9 @@ int main(int argv, char *argc[]) {
 
   Hstep = steps/2;
 
-
-
-
 	for (i=0; i<steps; i++) {
 
 		pold = strcopy(p);
-
 		p = RK4(p, c);
 		//fprintf(output, "%.8lf %.14lf %.14lf %.14lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
 
@@ -99,18 +95,26 @@ int main(int argv, char *argc[]) {
 		//fprintf(cost, "%.14lf\n", C);
     //printf("%.14lf %.14lf\n", C, Co);
 
-    if ( i == Hstep ) { S = strcopy(p); Sold = strcopy(pold); e = intorno(S, Sold); }
+    if ( i == Hstep ) { 
+      S = strcopy(p); 
+      Sold = strcopy(pold); 
+      e = intorno(S, Sold);
+    }
 
 		if ( e.x >= fabs(p.x - S.x) && e.y >= fabs(p.y - S.y) && e.z >= fabs(p.z - S.z) ) {
-			if (e.x >= fabs(pold.x - Sold.x) && e.y >= fabs(pold.y - Sold.y) && e.z >= fabs(pold.z - Sold.z) ) {
+			
+      if (e.x >= fabs(pold.x - Sold.x) && e.y >= fabs(pold.y - Sold.y) && e.z >= fabs(pold.z - Sold.z) ) {
+        
         dperiodo[k] = (double)i*c.dt;
         k++;
-        printf("%d\t", k);
-        //printf("%d\t%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf ", k, Sold.x, S.x, pold.x, p.x, Sold.y, S.y, pold.y, p.y, Sold.z, S.z, pold.z, p.z, (double)i*c.dt);
+        printf("%d\n", k);
+        
         if (k > 1) fprintf(periodo, "%lf %.8lf\n", (double)i*c.dt, dperiodo[k-1] - dperiodo[k-2]);
-        printf("\n");
-//        printf("%d %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf %.14lf\n", k, Sold.x, S.x, pold.x, p.x, Sold.y, S.y, pold.y, p.y, Sold.z, S.z, pold.z, p.z, (double)i*c.dt);
-        if (k == (kstop - 4) ) { dperiodo = (double *) realloc( dperiodo, 2 * kstop * sizeof(double)); kstop *= 2; printf("reallocated dperiod memory\n");}
+        
+        if (k == (kstop - 4) ) { 
+          dperiodo = (double *) realloc( dperiodo, 2 * kstop * sizeof(double)); 
+          kstop *= 2; printf("reallocated dperiod memory\n");
+        }
       }
 		}
 	}
@@ -118,7 +122,7 @@ int main(int argv, char *argc[]) {
   free(dperiodo);
 
 
-
+printf("Vario dt per osservare l'andamento di C/Co - 1\n");
 /****ricalcolo il moto fino a 10.t variando il dt****/
   for (c.dt=1.; c.dt>=0.0001; c.dt/=2.) {
     tmax = 10;
@@ -143,6 +147,8 @@ int main(int argv, char *argc[]) {
 
 	for (j=0; j<2; j++) {
 
+    printf("E %d\n", j+1);
+
     dperiodo = (double *) malloc(NUM_PERIODI * sizeof(double));
     if (dperiodo == NULL ) { printf("malloc error\n"); exit(-1); }
     dperiodo = (double *) calloc(NUM_PERIODI, sizeof(double));
@@ -153,7 +159,7 @@ int main(int argv, char *argc[]) {
 		rho_variable = fopen(filename, "w");
 
 		p.x = x0; p.y = y0; p.z = z0;
-    k = 0; j = 0;
+    k = 0; l = 0;
 
     steps = (long int)(tmax/c.dt);
     Hstep = steps/2;
@@ -168,26 +174,45 @@ int main(int argv, char *argc[]) {
       pold = strcopy(p);
       p = RK4(p, c);
       
-      if ( i == Hstep ) { S = strcopy(p); Sold = strcopy(pold); e = intorno(S, Sold); }
-			if ( i > Hstep ) { 
+      if ( i == Hstep ) { 
+        S = strcopy(p); 
+        Sold = strcopy(pold); 
+        e = intorno(S, Sold);
+      }
+			
+      else if ( i > Hstep/2. ) { 
         fprintf(rho_variable, "%.4lf %.8lf %.8lf %.8lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
-        
-        if (e.x >= fabs(p.x - S.x) && e.y >= fabs(p.y - S.y) && e.z >= fabs(p.z - S.z) ) {  // controllo se il moto del punto si trova nei punti scelti S e Sold 
+
+        // controllo se il moto del punto si trova nei punti scelti S e Sold 
+        if (e.x >= fabs(p.x - S.x) && e.y >= fabs(p.y - S.y) && e.z >= fabs(p.z - S.z) ) {
+
+          //controllo se la direzione del passaggio è la stessa
           if (e.x >= fabs(pold.x - Sold.x) && e.y >= fabs(pold.y - Sold.y) && e.z >= fabs(pold.z - Sold.z) ) {
+            
             dperiodo[k] = (double)i*c.dt;
-            k++; j++; //aggiornamneto contatori
-            if (k == (kstop - 4) ) { dperiodo = (double *) realloc( dperiodo, 2 * kstop * sizeof(double)); kstop *= 2; printf("reallocated dperiod memory\n"); }
-            if (k > 1) { fprintf(periodo, "%.8lf %.14lf\n", (double)i*c.dt, dperiodo[k-1]-dperiodo[k-2]); }
+            k++; l++; //aggiornamneto contatori
+
+            if (k == (kstop - 4) ) { //
+              dperiodo = (double *) realloc( dperiodo, 2 * kstop * sizeof(double)); 
+              kstop *= 2; 
+              printf("reallocated dperiod memory\n"); 
+            }
+            
+            if (k > 1) { 
+              fprintf(periodo, "%.8lf %.14lf\n", (double)i*c.dt, dperiodo[k-1]-dperiodo[k-2]); 
+            }
+            
+            if ( k > 2 && dperiodo[k-1]-dperiodo[k-2] < (dperiodo[k-2]-dperiodo[k-3])/4.) {
+              printf("A S I N T O T O   T I M E\t %lf\n",( ( (double)i*c.dt) - 3 ) );
+              fprintf(rho_variable, "#Asintotico a {x:%.8lf, y:%.8lf, z:%.8lf, t:%lf}\n", p.x, p.y, p.z, (double)i*c.dt);
+              i = steps;
+            }
           }
         }
-        if (j > (3/c.dt) ) {
-          printf("A S I N T O T O   T I M E\t %lf\n",( ( (double)i*c.dt) - 3 ) );
-          fprintf(rho_variable, "#TROVATO ASINTOTO PER I PUNTI x:%.8lf y:%.8lf z:%.8lf t:%lf\n", p.x, p.y, p.z, (double)i*c.dt);
-          i = steps + 1;
-        }
-        if (i%( (long int)(5/c.dt) ) == 0) j = 0; //ogni 5 secondi controlla quante volte e stato assunto il target
       }
-		}
+    }
+
+
 
     free(dperiodo);
     fclose(rho_variable);
@@ -197,16 +222,8 @@ int main(int argv, char *argc[]) {
 
 
 
-
-
-	//gpscript = fopen("mscript.gp", "w");
-	//fprintf(gpscript, "set term x11 persist\nset multiplot\nunset autoscale\nset yrange [0.5:8]\nset xrange [200:400]\nunset key\nplot");
-
-
-
-
 /****RIORDINARE QUESTA SEZIONE (RIGUARDA LA PARTE 2)****/
-  /*
+/*
 	c.a = 0.5;
 	c.b = 0.1;
 	x0 = 1.2;
@@ -334,9 +351,9 @@ struct vector strcopy(vector a) {
 struct vector intorno(vector S, vector Sold) {
   vector e;
 
-  e.x = fabs((S.x-Sold.x)/2.5);
-  e.y = fabs((S.y-Sold.y)/2.5);
-  e.z = fabs((S.z-Sold.z)/2.5);
+  e.x = fabs((S.x-Sold.x)/2.);
+  e.y = fabs((S.y-Sold.y)/2.);
+  e.z = fabs((S.z-Sold.z)/2.);
 
   return e;
 }
