@@ -19,7 +19,7 @@ typedef struct pars {
 
 struct vector RK4(vector, pars);
 struct vector strcopy(vector);
-struct vector intorno(vector, vector);
+struct vector intorno(vector, vector, double);
 
 double f(double, double, double, pars);
 double g(double, double, double, pars);
@@ -28,10 +28,10 @@ double h(double, double, double, pars);
 
 int main(int argv, char *argc[]) {
 
-	int tmax, k, kstop, j, width, l;
-	long int i, steps;
+	int k, kstop, j, width, l;
+	long int i, steps, Hstep;
 	double x0, y0, z0;
-  double C, Co, Hstep;
+  double C, Co, tmax;
   char filename[30];
 	
   double *dperiodo;
@@ -52,7 +52,7 @@ int main(int argv, char *argc[]) {
 	pars c;
 
 	input = fopen("input.txt", "r");
-	fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %d\n", &c.a, &c.b, &c.rho, &p.x, &p.y, &p.z, &c.dt, &tmax);
+	fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %lf\n", &c.a, &c.b, &c.rho, &p.x, &p.y, &p.z, &c.dt, &tmax);
 
 	output = fopen("output.dat", "w");
 	fprintf(output, "#t x y z\n");
@@ -98,34 +98,36 @@ int main(int argv, char *argc[]) {
     if ( i == Hstep ) { 
       S = strcopy(p); 
       Sold = strcopy(pold); 
-      e = intorno(S, Sold);
+      e = intorno(S, Sold, 1);
     }
 
-		if ( e.x >= fabs(p.x - S.x) && e.y >= fabs(p.y - S.y) && e.z >= fabs(p.z - S.z) ) {
-			
-      if (e.x >= fabs(pold.x - Sold.x) && e.y >= fabs(pold.y - Sold.y) && e.z >= fabs(pold.z - Sold.z) ) {
-        
-        dperiodo[k] = (double)i*c.dt;
-        k++;
-        printf("%d\n", k);
-        
-        if (k > 1) fprintf(periodo, "%lf %.8lf\n", (double)i*c.dt, dperiodo[k-1] - dperiodo[k-2]);
-        
-        if (k == (kstop - 4) ) { 
-          dperiodo = (double *) realloc( dperiodo, 2 * kstop * sizeof(double)); 
-          kstop *= 2; printf("reallocated dperiod memory\n");
+    if ( i > Hstep ) {
+  		if ( e.x >= fabs(p.x - S.x) && e.y >= fabs(p.y - S.y) && e.z >= fabs(p.z - S.z) ) {
+  			
+        if (e.x >= fabs(pold.x - Sold.x) && e.y >= fabs(pold.y - Sold.y) && e.z >= fabs(pold.z - Sold.z) ) {
+          
+          dperiodo[k] = (double)i*c.dt;
+          k++;
+          printf("#%d\n", k);
+          
+          if (k > 1) fprintf(periodo, "%lf %.8lf\n", (double)i*c.dt, dperiodo[k-1] - dperiodo[k-2]);
+          
+          if (k == (kstop - 4) ) { 
+            dperiodo = (double *) realloc( dperiodo, 2 * kstop * sizeof(double)); 
+            kstop *= 2; printf("#reallocated dperiod memory\n");
+          }
         }
-      }
-		}
-	}
+  		}
+    }
+  }
 
   free(dperiodo);
 
 
-printf("Vario dt per osservare l'andamento di C/Co - 1\n");
+printf("#Vario dt per osservare l'andamento di C/Co - 1\n");
 /****ricalcolo il moto fino a 10.t variando il dt****/
-  for (c.dt=1.; c.dt>=0.0001; c.dt/=2.) {
-    tmax = 10;
+  for (c.dt=1.; c.dt>=0.0001; c.dt/=10.) {
+    tmax = 10.;
     steps = (long int)(tmax/c.dt);
     p.x = x0;
     p.y = y0;
@@ -134,26 +136,26 @@ printf("Vario dt per osservare l'andamento di C/Co - 1\n");
     for (i=0; i<=steps; i++) { p = RK4(p, c); }
     C = log(p.x) - p.x + log(p.y) - p.y + p.z;
     //printf("%.14lf %.14lf %.14lf %.24lf\n", p.x, p.y, p.z, C);
-    fprintf(costerr, "%.14lf %.52lf\n", c.dt, fabs(C/Co - 1) );
+    fprintf(costerr, "%.14lf %.24lf\n", c.dt, fabs(C/Co - 1) );
   }
 
       /****************************/
       /****************************/
       /****************************/
-      /****INIZIO SECONDA PARTE****/printf("INIZIO SECONDA PARTE\n");
+      /****INIZIO SECONDA PARTE****/printf("#INIZIO SECONDA PARTE\n");
       /****************************/
       /****************************/
       /****************************/
 
 	for (j=0; j<2; j++) {
 
-    printf("E %d\n", j+1);
+    //printf("#E %d\n", j+1);
 
     dperiodo = (double *) malloc(NUM_PERIODI * sizeof(double));
     if (dperiodo == NULL ) { printf("malloc error\n"); exit(-1); }
     dperiodo = (double *) calloc(NUM_PERIODI, sizeof(double));
 
-		fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %d\n", &c.a, &c.b, &c.rho, &x0, &y0, &z0, &c.dt, &tmax);
+		fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %lf\n", &c.a, &c.b, &c.rho, &x0, &y0, &z0, &c.dt, &tmax);
 
 		sprintf(filename, "rho%0*d.dat", width, (int)(c.rho*100.));
 		rho_variable = fopen(filename, "w");
@@ -167,7 +169,7 @@ printf("Vario dt per osservare l'andamento di C/Co - 1\n");
     sprintf(filename, "periodorho%0*d.dat", width, (int)(c.rho*100.));
     periodo = fopen(filename, "w");
     fprintf(periodo, "#Condizioni Iniziali\n");
-    fprintf(periodo, "#%lf %lf %lf %lf %lf %lf %lf %d\n", p.x, p.y, p.z, c.a, c.b, c.rho, c.dt, tmax);
+    fprintf(periodo, "#%lf %lf %lf %lf %lf %lf %lf %lf\n", p.x, p.y, p.z, c.a, c.b, c.rho, c.dt, tmax);
 
 		for (i=0; i <= steps; i++) {
 
@@ -177,7 +179,7 @@ printf("Vario dt per osservare l'andamento di C/Co - 1\n");
       if ( i == Hstep ) { 
         S = strcopy(p); 
         Sold = strcopy(pold); 
-        e = intorno(S, Sold);
+        e = intorno(S, Sold, 1);
       }
 			
       else if ( i > Hstep/2. ) { 
@@ -195,18 +197,18 @@ printf("Vario dt per osservare l'andamento di C/Co - 1\n");
             if (k == (kstop - 4) ) { //
               dperiodo = (double *) realloc( dperiodo, 2 * kstop * sizeof(double)); 
               kstop *= 2; 
-              printf("reallocated dperiod memory\n"); 
+              printf("#reallocated dperiod memory\n"); 
             }
             
             if (k > 1) { 
               fprintf(periodo, "%.8lf %.14lf\n", (double)i*c.dt, dperiodo[k-1]-dperiodo[k-2]); 
             }
             
-            if ( k > 2 && dperiodo[k-1]-dperiodo[k-2] < (dperiodo[k-2]-dperiodo[k-3])/4.) {
-              printf("A S I N T O T O   T I M E\t %lf\n",( ( (double)i*c.dt) - 3 ) );
-              fprintf(rho_variable, "#Asintotico a {x:%.8lf, y:%.8lf, z:%.8lf, t:%lf}\n", p.x, p.y, p.z, (double)i*c.dt);
-              i = steps;
-            }
+            // if ( k > 2 && dperiodo[k-1]-dperiodo[k-2] < (dperiodo[k-2]-dperiodo[k-3])/4.) {
+            //   printf("#A S I N T O T O   T I M E\t %lf\n",( ( (double)i*c.dt) - 3 ) );
+            //   fprintf(rho_variable, "#Asintotico a {x:%.8lf, y:%.8lf, z:%.8lf, t:%lf}\n", p.x, p.y, p.z, (double)i*c.dt);
+            //   i = steps;
+            // }
           }
         }
       }
@@ -223,73 +225,90 @@ printf("Vario dt per osservare l'andamento di C/Co - 1\n");
 
 
 /****RIORDINARE QUESTA SEZIONE (RIGUARDA LA PARTE 2)****/
-/*
+
 	c.a = 0.5;
 	c.b = 0.1;
 	x0 = 1.2;
 	y0 = 0.5;
 	z0 = 0.3;
-	c.dt = 0.1;
-	tmax = 800;
-	k = 0;
-	//As = 0;
-	e = c.dt/2.;
+	c.dt = 0.01;
+	tmax = 200;
 
 	steps = (long int)(tmax/c.dt);
+  Hstep = steps/2;
 
 
-	for (j=0; j<=100; j++)  { //100 passi per arrivare da 1.2 a 1.5 rho
+	for (j=0; j<=50; j++)  { //100 passi per arrivare da 1.2 a 1.5 rho
 
 
-		c.rho = 1.197;
-		c.rho += 0.003*(double)j; //incremento dell'1% dell'intervallo
-
-		//sprintf(filename, "cambiamento_drast_rho%0*d.dat", width, j);
-		// fprintf(gpscript, " '%s' every ::5000::8000 u 1:4 w l\nreplot", filename);
-		// drastico = fopen(filename, "w");
-
-		sprintf(filename, "peridi.dat");
-		// //completare la scrittura dello script gp
-		periodo = fopen(filename, "w");
-		fprintf(periodo, "%lf ", c.rho);
-
+		c.rho = 1.200;
+		c.rho += 0.006*(double)j; //incremento dell'1% dell'intervallo
 		p.x = x0;
 		p.y = y0;
 		p.z = z0;
+    k = 0;
 
-		for (i = 0; i<=steps; i++) { //steps dovrebbe essere 8000
+    
+    dperiodo = (double *) malloc(NUM_PERIODI * sizeof(double));
+    if (dperiodo == NULL ) { printf("malloc error\n"); exit(-1); }
+    dperiodo = (double *) calloc(NUM_PERIODI, sizeof(double));
+    kstop = NUM_PERIODI;
+		
+
+    for (i = 0; i<=steps; i++) { //steps dovrebbe essere 8000
 
 			pold = strcopy(p);
-
 			p = RK4(p, c);
 
-			if (i == 4000) { Sold = strcopy(pold); S = strcopy(p); }
-			if (i > 4000) {
-				//fprintf(drastico, "%.8lf %.14lf %.14lf %.14lf\n", (double)i*c.dt, p.x, p.y, p.z);
-				if (e >= fabs(p.x - S.x) && e >= fabs(p.y - S.y) && e >= fabs(p.z - S.z) ) {
-          			if (e >= fabs(pold.x - Sold.x) && e >= fabs(pold.y - Sold.y) && e >= fabs(pold.z - Sold.z) ) {
-            
+			if (i == Hstep) {
+        e = intorno(S, Sold, 20);
+        if (e.x >= fabs(p.x - S.x) && e.y >= fabs(p.y - S.y) && e.z >= fabs(p.z - S.z) ) {
+          
+          if (e.x >= fabs(pold.x - Sold.x) && e.y >= fabs(pold.y - Sold.y) && e.z >= fabs(pold.z - Sold.z) ) {
+            //printf("#cambiamento non drastico con rho:%.8lf\n", c.rho);
+          }
+        }
+        else {
+          //printf("#|||||cambiamento drastico, con rho:%.8lf\n", c.rho);
+        }      
+
+
+        Sold = strcopy(pold);
+        S = strcopy(p);
+        e = intorno(S, Sold, 0.7);
+      }
+			
+      if (i > Hstep) {
+
+        //printf("%lf %lf %lf ", p.x, p.y, p.z);
+				
+        if (e.x >= fabs(p.x - S.x) && e.y >= fabs(p.y - S.y) && e.z >= fabs(p.z - S.z) ) {
+          if (e.x >= fabs(pold.x - Sold.x) && e.y >= fabs(pold.y - Sold.y) && e.z >= fabs(pold.z - Sold.z) ) {
+            //printf("#periodo %lf\n", (double)i*c.dt); 
+            dperiodo[k] = (double)i*c.dt; k++;
+        
+            //if (k > 1) printf("%lf %.8lf ", c.rho, dperiodo[k-1]-dperiodo[k-2]);
+           
+            if (k == (kstop - 4) ) { //
+              dperiodo = (double *) realloc( dperiodo, 2 * kstop * sizeof(double)); 
+              kstop *= 2; 
+              //printf("#reallocated dperiod memory\n"); 
+            }
           }
 				}
+        //printf("\n");
 			}
-
-			
-			//As += asintotico(pold, p, c);
-			//if (As == 10000) { i = steps; printf("%lf esiste asintoto\n", c.rho); }
 		}
-
-		fclose(drastico);
-
+  free(dperiodo);
 	}
 
-*/
 	fclose(cost);
   fclose(costerr);
 	fclose(input);
 	fclose(output);
 
 	exit(0);
-}
+}//////////////////////////////// end main
 
 
 
@@ -348,12 +367,12 @@ struct vector strcopy(vector a) {
 	return new;
 }
 
-struct vector intorno(vector S, vector Sold) {
+struct vector intorno(vector S, vector Sold, double i) {
   vector e;
 
-  e.x = fabs((S.x-Sold.x)/2.);
-  e.y = fabs((S.y-Sold.y)/2.);
-  e.z = fabs((S.z-Sold.z)/2.);
+  e.x = fabs(i*(S.x-Sold.x)/2.);
+  e.y = fabs(i*(S.y-Sold.y)/2.);
+  e.z = fabs(i*(S.z-Sold.z)/2.);
 
   return e;
 }
