@@ -1,0 +1,135 @@
+\documentclass[11pt,a4paper,openright]{article}
+
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage[italian]{babel}
+\usepackage{adjustbox}
+\usepackage{amsmath}
+\usepackage{float}
+
+\begin{document}
+
+
+\title{\textbf{II Prova Individuale di Laboratorio di Meccanica} \\ uN C0SA M1SuRaTa\\\small{Prof. S. De Cecco}}
+\author{Riccardo Riva\\D2-08}
+\date{22 giugno 2017}
+
+\maketitle
+ \newpage
+\section{Introduzione}
+Gli apparati a disposizione nel laboratorio per eseguire le dovute misurazioni sono:
+\begin{itemize}
+\item
+\end{itemize}
+
+\subsection{Stima degli errori degli strumenti}
+diocare
+
+\section{Analisi Dati}
+
+\section{Conclusione}
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+                                      %____________________________________%
+%%%%%%========  RACCOLTA DI FORMULE GIÀ TRASCRITTE  =========%%%%%%
+
+
+
+
+
+
+%==== MINIMI QUADRATI ====%
+
+\begin{eqnarray*}
+m= \frac{\overline{xy}- \overline{x}\; \overline{y}}{\overline{x^2}-\overline{x}^2}\\
+c=\frac{\overline{x^2}\overline{y}-\overline{x}\;\overline{xy}}{\overline{x^2}-\overline{x}^2}\\
+\sigma(m)=\frac{1}{(\overline{x^2}-\overline{x}^2)\cdot \sum\nolimits_{i} \frac{1}{\sigma^2(y_i)} }\\
+\sigma(c)=\frac{\overline{x^2}}{(\overline{x^2}-\overline{x}^2)\cdot \sum\nolimits_{i} \frac{1}{\sigma^2(y_i)} }\\
+Cov[m,c]=\frac{\overline{x}}{(\overline{x^2}-\overline{x}^2)\cdot \sum\nolimits_{i} \frac{1}{\sigma^2(y_i)} }
+\end{eqnarray*}
+
+
+
+%==== SISTEMA DI EQUAZIONI ====%
+
+\begin{eqnarray*}
+\begin{cases}
+15 + A = 36 \\
+2A =6^2
+\end{cases}
+\end{eqnarray*}
+
+
+
+%==== RAPPRESENTAZIONE DI UNA TABELLA ====%
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|}
+  \hline
+ colonna 1 & colonna 2\\
+ \hline
+ $valori$ & $valori$\\
+   \hline
+\end{tabular}
+\end{table}
+
+
+
+%==== FORMULA DI PROPAGAZIONE DELLE INCERTEZZE CON DEV PARZIALI ====%
+
+
+
+\begin{eqnarray}
+\delta (f)= \left|\frac{\delta f}{\delta x}\right| \sigma(x) \oplus \left|\frac{\delta f}{\delta y}\right| \sigma(y) \oplus \left|\frac{\delta f}{\delta z}\right| \sigma(z)
+\end{eqnarray}
+
+
+
+%==== GRAFICI IN PDF ====%
+
+
+\begin{figure}
+\label{fig:cosa}
+\includegraphics[scale=0.5]{nome.pdf}
+\caption{Questo testo deve avere un senso altrimenti cancella la riga}
+\end{figure}
+
+	%==== Richiamare un label ====%
+	
+		\ref{fig:cosa} %[per funzionare non deve avere l'asterisco la figura]
+	
+	
+	
+%==== GEOMETRIA DELLA PAGINA ====%
+
+\newpage
+\newgeometry{top=0.5cm, bottom=0.5cm, right=0.5cm, left=0.5cm}
+
+
+\restoregeometry
+		
+
+
+
+
+
+
+
+
+
+
+

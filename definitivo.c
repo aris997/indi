@@ -26,13 +26,13 @@ double g(double, double, double, pars);
 double h(double, double, double, pars);
 
 
-int main(int argv, char *argc[]) {
+int main(int argc, char *argv[]) {
 
 	int k, kstop, j, width, l;
 	long int i, steps, Hstep;
 	double x0, y0, z0;
   double C, Co, tmax;
-  char filename[30];
+  //char filename[30];
 	
   double *dperiodo;
 
@@ -42,7 +42,7 @@ int main(int argv, char *argc[]) {
 	FILE *cost;
   FILE *costerr;
 	//FILE *piripicchio;
-  FILE *rho_variable;
+  //FILE *rho_variable;
   //FILE *drastico;
   //FILE *gpscript;
 	
@@ -51,50 +51,70 @@ int main(int argv, char *argc[]) {
   vector e;
 	pars c;
 
-	input = fopen("input.txt", "r");
-	fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %lf\n", &c.a, &c.b, &c.rho, &p.x, &p.y, &p.z, &c.dt, &tmax);
+  if ( argc == 10 ) {
+    c.a = atof(argv[2]);
+    c.b = atof(argv[3]);
+    c.rho = atof(argv[4]);
+    p.x = atof(argv[5]);
+    p.y = atof(argv[6]);
+    p.z = atof(argv[7]);
+    c.dt = atof(argv[8]);
+    tmax = atof(argv[9]);
+  
+    if (tmax < 50. && c.dt >= 1.) {
+      printf("#tmax troppo piccolo o dt troppo grande\nEsecuzione invalidata\n");
+      exit(-1);
+    }
+  }
 
+
+
+  else {
+    printf("#Inserire (-1) per presa dati da file input\n");
+    printf("#Inserire: a b rho x0 y0 z0 dt tmax da linea di comando per usare tali valori scelti\n");
+    printf("#l esecuzione prenderà i dati di default\n");
+    p.x = 1.2;
+    p.y = 0.5;
+    p.z = 0.;
+    c.a = 0;
+    c.b = 0;
+    c.rho = 0.2;
+    c.dt = 0.01;
+    tmax = 50.;
+  }
+	
 	output = fopen("output.dat", "w");
-	fprintf(output, "#t x y z\n");
+	fprintf(output, "#t\t\t\tx\t\t\t\t\ty\t\t\t\t\tz\n");
 
-	periodo = fopen("periodo.dat", "w");
+	//periodo = fopen("periodo.dat", "w");
 	//fprintf(periodo, "#periodo\n");
 
-	cost = fopen("costante.dat", "w");
-	costerr = fopen("costanterrore.dat", "w");
+	costerr = fopen("costante_dt.dat", "w");
+  cost = fopen("cost.dat", "w");
 
-	//fprintf(cost, "#Costante\n");
-
-	//piripicchio = fopen("piripicchio.dat", "w");
 
 	x0 = p.x; y0 = p.y;	z0 = p.z;
+  Co = log(x0) - x0 + log(y0) - y0;
 
   k=0; kstop = NUM_PERIODI; j=0;
 
-  width = 3;
-
-	fprintf(output, "%.8lf %.8lf %.8lf %.8lf\n", 0., x0, y0, z0);
-
-	Co = log(x0) - x0 + log(y0) - y0;
-
 	steps = (long int)(tmax/c.dt);
-
-  dperiodo = (double *) malloc(NUM_PERIODI * sizeof(double));
-  if ( dperiodo == NULL ) {printf("malloc error\n"); exit(-1);}
-  else dperiodo = (double *) calloc(NUM_PERIODI, sizeof(double));
-
   Hstep = steps/2;
 
-	for (i=0; i<steps; i++) {
+  //dperiodo = (double *) malloc(NUM_PERIODI * sizeof(double));
+  //if ( dperiodo == NULL ) {printf("malloc error\n"); exit(-1);}
+  //else dperiodo = (double *) calloc(NUM_PERIODI, sizeof(double));
+
+
+	for (i=0; i<=steps; i++) {
 
 		pold = strcopy(p);
 		p = RK4(p, c);
-		//fprintf(output, "%.8lf %.14lf %.14lf %.14lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
-
+		fprintf(output, "%.8lf\t%.14lf\t%.14lf\t%.14lf\n", ((double)i+1)*c.dt, p.x, p.y, p.z);
 		C = log(p.x) - p.x + log(p.y) - p.y + p.z;
-		//fprintf(cost, "%.14lf\n", C);
+		fprintf(cost, "%lf %.14lf\n", ((double)i+1)*c.dt, C/Co -1);
     //printf("%.14lf %.14lf\n", C, Co);
-
+/*
     if ( i == Hstep ) { 
       S = strcopy(p); 
       Sold = strcopy(pold); 
@@ -118,14 +138,17 @@ int main(int argv, char *argc[]) {
           }
         }
   		}
-    }
+    }*/
   }
 
-  free(dperiodo);
+  //free(dperiodo);
+  fclose(cost);
+  fclose(output);
 
 
-printf("#Vario dt per osservare l'andamento di C/Co - 1\n");
-/****ricalcolo il moto fino a 10.t variando il dt****/
+  printf("#Vario dt per osservare l'andamento di C/Co - 1\n");
+  
+  /****ricalcolo il moto fino a 10.t variando il dt****/
   for (c.dt=1.; c.dt>=0.0001; c.dt/=10.) {
     tmax = 10.;
     steps = (long int)(tmax/c.dt);
@@ -146,7 +169,7 @@ printf("#Vario dt per osservare l'andamento di C/Co - 1\n");
       /****************************/
       /****************************/
       /****************************/
-
+/*
 	for (j=0; j<2; j++) {
 
     //printf("#E %d\n", j+1);
@@ -155,7 +178,7 @@ printf("#Vario dt per osservare l'andamento di C/Co - 1\n");
     if (dperiodo == NULL ) { printf("malloc error\n"); exit(-1); }
     dperiodo = (double *) calloc(NUM_PERIODI, sizeof(double));
 
-		fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %lf\n", &c.a, &c.b, &c.rho, &x0, &y0, &z0, &c.dt, &tmax);
+		//fscanf(input, "%lf %lf %lf %lf %lf %lf %lf %lf\n", &c.a, &c.b, &c.rho, &x0, &y0, &z0, &c.dt, &tmax);
 
 		sprintf(filename, "rho%0*d.dat", width, (int)(c.rho*100.));
 		rho_variable = fopen(filename, "w");
@@ -222,10 +245,11 @@ printf("#Vario dt per osservare l'andamento di C/Co - 1\n");
 
 	}
 
-
+*/
+  printf("sasd\n");
 
 /****RIORDINARE QUESTA SEZIONE (RIGUARDA LA PARTE 2)****/
-
+/*
 	c.a = 0.5;
 	c.b = 0.1;
 	x0 = 1.2;
@@ -269,7 +293,7 @@ printf("#Vario dt per osservare l'andamento di C/Co - 1\n");
           }
         }
         else {
-          //printf("#|||||cambiamento drastico, con rho:%.8lf\n", c.rho);
+          //printf("#cambiamento drastico, con rho:%.8lf\n", c.rho);
         }      
 
 
@@ -301,11 +325,11 @@ printf("#Vario dt per osservare l'andamento di C/Co - 1\n");
 		}
   free(dperiodo);
 	}
-
-	fclose(cost);
+*/
+  printf("porcodio");
+  
   fclose(costerr);
-	fclose(input);
-	fclose(output);
+	//fclose(input);
 
 	exit(0);
 }//////////////////////////////// end main
