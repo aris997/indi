@@ -37,3 +37,8 @@ set multiplot
 plot 'rho75.dat' u 1:2 w l
 replot 'rho100.dat' u 1:2 w l
 unset multiplot
+
+
+
+
+set noxtics //fa sparire tutta la griglia verticale e i numeri su essa

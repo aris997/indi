@@ -31,13 +31,13 @@ int main(int argc, char *argv[]) {
 	int k, kstop, j, width, l;
 	long int i, steps, Hstep;
 	double x0, y0, z0;
-  double C, Co, tmax;
+  double C, Co, tmax, delta_periodo;
   //char filename[30];
 	
   double *dperiodo;
 
 	FILE *output;
-	FILE *input;
+	//FILE *input;
 	FILE *periodo;
 	FILE *cost;
   FILE *costerr;
@@ -70,8 +70,7 @@ int main(int argc, char *argv[]) {
 
 
   else {
-    printf("#Inserire (-1) per presa dati da file input\n");
-    printf("#Inserire: a b rho x0 y0 z0 dt tmax da linea di comando per usare tali valori scelti\n");
+    printf("#Per valori a piacere inserire da shell dopo il richiamo: a b rho x0 y0 z0 dt tmax\n");
     printf("#l esecuzione prenderà i dati di default\n");
     p.x = 1.2;
     p.y = 0.5;
@@ -80,7 +79,7 @@ int main(int argc, char *argv[]) {
     c.b = 0;
     c.rho = 0.2;
     c.dt = 0.01;
-    tmax = 50.;
+    tmax = 1000.;
   }
 	
 	output = fopen("output.dat", "w");
@@ -91,7 +90,8 @@ int main(int argc, char *argv[]) {
 
 	costerr = fopen("costante_dt.dat", "w");
   cost = fopen("cost.dat", "w");
-
+  periodo = fopen("periodo_pp1.dat", "w");
+  fprintf(periodo, "#periodo\n");
 
 	x0 = p.x; y0 = p.y;	z0 = p.z;
   Co = log(x0) - x0 + log(y0) - y0;
@@ -101,20 +101,21 @@ int main(int argc, char *argv[]) {
 	steps = (long int)(tmax/c.dt);
   Hstep = steps/2;
 
-  //dperiodo = (double *) malloc(NUM_PERIODI * sizeof(double));
-  //if ( dperiodo == NULL ) {printf("malloc error\n"); exit(-1);}
-  //else dperiodo = (double *) calloc(NUM_PERIODI, sizeof(double));
+  dperiodo = (double *) malloc(NUM_PERIODI * sizeof(double));
+  if ( dperiodo == NULL ) {printf("malloc error\n"); exit(-1);}
+  else dperiodo = (double *) calloc(NUM_PERIODI, sizeof(double));
 
 
 	for (i=0; i<=steps; i++) {
 
 		pold = strcopy(p);
 		p = RK4(p, c);
-		fprintf(output, "%.8lf\t%.14lf\t%.14lf\t%.14lf\n", ((double)i+1)*c.dt, p.x, p.y, p.z);
-		C = log(p.x) - p.x + log(p.y) - p.y + p.z;
-		fprintf(cost, "%lf %.14lf\n", ((double)i+1)*c.dt, C/Co -1);
+		
+    fprintf(output, "%.8lf\t%.14lf\t%.14lf\t%.14lf\n", ((double)i+1)*c.dt, p.x, p.y, p.z);
+		//C = log(p.x) - p.x + log(p.y) - p.y + p.z;
+		//fprintf(cost, "%lf %.24lf\n", ((double)i+1)*c.dt, C/Co -1);
     //printf("%.14lf %.14lf\n", C, Co);
-/*
+
     if ( i == Hstep ) { 
       S = strcopy(p); 
       Sold = strcopy(pold); 
@@ -123,14 +124,13 @@ int main(int argc, char *argv[]) {
 
     if ( i > Hstep ) {
   		if ( e.x >= fabs(p.x - S.x) && e.y >= fabs(p.y - S.y) && e.z >= fabs(p.z - S.z) ) {
-  			
         if (e.x >= fabs(pold.x - Sold.x) && e.y >= fabs(pold.y - Sold.y) && e.z >= fabs(pold.z - Sold.z) ) {
           
           dperiodo[k] = (double)i*c.dt;
           k++;
           printf("#%d\n", k);
-          
-          if (k > 1) fprintf(periodo, "%lf %.8lf\n", (double)i*c.dt, dperiodo[k-1] - dperiodo[k-2]);
+          delta_periodo = dperiodo[k-1] - dperiodo[k-2];
+          if (k > 1) fprintf(periodo, "%.8lf %.10e\n", delta_periodo, delta_periodo/c.dt);
           
           if (k == (kstop - 4) ) { 
             dperiodo = (double *) realloc( dperiodo, 2 * kstop * sizeof(double)); 
@@ -138,10 +138,10 @@ int main(int argc, char *argv[]) {
           }
         }
   		}
-    }*/
+    }
   }
 
-  //free(dperiodo);
+  free(dperiodo);
   fclose(cost);
   fclose(output);
 
