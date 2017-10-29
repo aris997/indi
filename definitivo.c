@@ -25,16 +25,16 @@ double f(double, double, double, pars);
 double g(double, double, double, pars);
 double h(double, double, double, pars);
 
-double ask(char* argomento[], double, double);
+double ask(char* argomento, double, double);
 
 
 int main(int argc, char *argv[]) {
 
-	int k, kstop, j, width, l;
+	int k, kstop, l;
 	long int i, steps, Hstep;
 	double x0, y0, z0;
   double C, Co, tmax, delta_periodo;
-  char filename[30];
+  //char filename[30];
 	
   double *dperiodo;
 
@@ -42,9 +42,9 @@ int main(int argc, char *argv[]) {
 	//FILE *input;
 	FILE *periodo;
 	FILE *cost;
-  FILE *costerr;
+  //FILE *costerr;
 	//FILE *piripicchio;
-  FILE *rho_variable;
+  //FILE *rho_variable;
   //FILE *drastico;
   //FILE *gpscript;
 	
@@ -69,10 +69,10 @@ int main(int argc, char *argv[]) {
 	//periodo = fopen("periodo.dat", "w");
 	//fprintf(periodo, "#periodo\n");
 
-	costerr = fopen("costante_dt.dat", "w");
+	//costerr = fopen("costante_dt.dat", "w");
   cost = fopen("cost.dat", "w");
-  periodo = fopen("periodo_pp1.dat", "w");
-  fprintf(periodo, "#periodo\n");
+  //periodo = fopen("periodo_pp1.dat", "w");
+  //fprintf(periodo, "#periodo\n");
 
 	x0 = p.x; y0 = p.y;	z0 = p.z;
   Co = log(x0) - x0 + log(y0) - y0;
@@ -92,9 +92,9 @@ int main(int argc, char *argv[]) {
 		pold = strcopy(p);
 		p = RK4(p, c);
 		
-    fprintf(output, "%.8lf\t%.14lf\t%.14lf\t%.14lf\n", ((double)i+1)*c.dt, p.x, p.y, p.z);
+    //fprintf(output, "%.8lf\t%.14lf\t%.14lf\t%.14lf\n", ((double)i+1)*c.dt, p.x, p.y, p.z);
 		C = log(p.x) - p.x + log(p.y) - p.y + p.z;
-		fprintf(cost, "%lf %.1lf %.18lf\n", ((double)i+1)*c.dt, C, C/Co - 1);
+		//fprintf(cost, "%lf %.1lf %.18lf\n", ((double)i+1)*c.dt, C, C/Co - 1);
     //printf("%.14lf %.14lf\n", C, Co);
 
     if ( i == Hstep ) { 
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
           k++;
           printf("#%d\n", k);
           delta_periodo = dperiodo[k-1] - dperiodo[k-2];
-          if (k > 1) fprintf(periodo, "%.8lf %.10e\n", delta_periodo, delta_periodo/c.dt);
+          //if (k > 1) fprintf(periodo, "%.8lf %.10e\n", delta_periodo, delta_periodo/c.dt);
           
           if (k == (kstop - 4) ) { 
             dperiodo = (double *) realloc( dperiodo, 2 * kstop * sizeof(double)); 
@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
     for (i=0; i<=steps; i++) { p = RK4(p, c); }
     C = log(p.x) - p.x + log(p.y) - p.y + p.z;
     //printf("%.14lf %.14lf %.14lf %.24lf\n", p.x, p.y, p.z, C);
-    fprintf(costerr, "%.14lf %.24lf\n", c.dt, fabs(C/Co - 1) );
+    //fprintf(costerr, "%.14lf %.24lf\n", c.dt, fabs(C/Co - 1) );
   }
 
       /****************************/
@@ -167,15 +167,19 @@ int main(int argc, char *argv[]) {
     passo = ask("passo, non troppo piccolo per intervalli grandi", 0.001, fabs(Mrho-mrho));
     drho = fabs(Mrho-mrho)*passo;
   }
+  else {
+    drho = 1.;
+  }
 
 
-	for (c.rho=mrho; c.rho<Mrho; c.rho+=drho) {
+
+	for (c.rho=mrho; c.rho<=Mrho; c.rho+=drho) {
 
 
     dperiodo = (double *) malloc(NUM_PERIODI * sizeof(double));
     if (dperiodo == NULL ) { printf("malloc error\n"); exit(-1); }
     dperiodo = (double *) calloc(NUM_PERIODI, sizeof(double));
-
+    kstop = NUM_PERIODI;
 
 
     c.a = 0.5;
@@ -183,22 +187,18 @@ int main(int argc, char *argv[]) {
     x0 = 1.2;
     y0 = 0.5;
     z0 = 0.3;
-    tmax = 10000.;
+    c.dt = 0.01;
+    tmax = 1000.;
 
 
 		//sprintf(filename, "rho%0*d.dat", width, (int)(c.rho*100.));
 		//rho_variable = fopen(filename, "w");
 
 		p.x = x0; p.y = y0; p.z = z0;
-    k = 0; l = 0;
+    k = 0;
 
     steps = (long int)(tmax/c.dt);
     Hstep = steps/2;
-
-    //sprintf(filename, "periodorho%0*d.dat", width, (int)(c.rho*100.));
-    //periodo = fopen(filename, "w");
-    //fprintf(periodo, "#Condizioni Iniziali\n");
-    //fprintf(periodo, "#%lf %lf %lf %lf %lf %lf %lf %lf\n", p.x, p.y, p.z, c.a, c.b, c.rho, c.dt, tmax);
 
 		for (i=0; i <= steps; i++) {
 
@@ -212,9 +212,7 @@ int main(int argc, char *argv[]) {
       }
 			
       else if ( i > Hstep/2. ) { 
-        //fprintf(rho_variable, "%.4lf %.8lf %.8lf %.8lf\n", c.dt*((double)(i+1)), p.x, p.y, p.z);
 
-        // controllo se il moto del punto si trova nei punti scelti S e Sold 
         if (e.x >= fabs(p.x - S.x) && e.y >= fabs(p.y - S.y) && e.z >= fabs(p.z - S.z) ) {
           //controllo se la direzione del passaggio è la stessa
           if (e.x >= fabs(pold.x - Sold.x) && e.y >= fabs(pold.y - Sold.y) && e.z >= fabs(pold.z - Sold.z) ) {
@@ -225,23 +223,19 @@ int main(int argc, char *argv[]) {
             if (k == (kstop - 4) ) { //
               dperiodo = (double *) realloc( dperiodo, 2 * kstop * sizeof(double)); 
               kstop *= 2; 
-              printf("#reallocated dperiod memory\n"); 
+              //printf("#reallocated dperiod memory\n"); 
             }
-            
-            //if (k > 1) {
-              //fprintf(periodo, "%.8lf %.14lf\n", (double)i*c.dt, dperiodo[k-1]-dperiodo[k-2]); 
-            //}
           }
         }
       }
     }
     if (k > 0) {
-      for (w=0; w<k; w++) dperiodototale += dperiodo[w];
-      dperiodototale/=k;
-      printf("#periodo rho: %lf \tT %.8lf \tincontri %d\n", c.rho, dperiodototale, k+1);
+      for (w=0; w<(k-1); w++) dperiodototale += dperiodo[w+1]-dperiodo[w];
+      dperiodototale/=(k-1);
+      printf("#periodo rho: %1.4lf \tT %.8lf \tincontri %d\n", c.rho, dperiodototale, k+1);
     }
     else {
-      printf("#periodo NON esiste per rho: %lf", c.rho);
+      printf("#periodo NON esiste per rho: %lf\n", c.rho);
     }
 
 
@@ -252,7 +246,7 @@ int main(int argc, char *argv[]) {
 	}
 
 
-  fclose(costerr);
+  //fclose(costerr);
 	
 	exit(0);
 }
@@ -333,7 +327,7 @@ struct vector intorno(vector S, vector Sold, double i) {
   return e;
 }
 
-double ask(char* argomento[], double a, double b) {
+double ask(char* argomento, double a, double b) {
   double w;
 
   printf("#Inserire %s\n", argomento);
