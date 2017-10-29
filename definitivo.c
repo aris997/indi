@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
 		
     fprintf(output, "%.8lf\t%.14lf\t%.14lf\t%.14lf\n", ((double)i+1)*c.dt, p.x, p.y, p.z);
 		C = log(p.x) - p.x + log(p.y) - p.y + p.z;
-		fprintf(cost, "%lf %.18lf %.18lf\n", ((double)i+1)*c.dt, C, C/Co - 1);
+		fprintf(cost, "%lf %.1lf %.18lf\n", ((double)i+1)*c.dt, C, C/Co - 1);
     //printf("%.14lf %.14lf\n", C, Co);
 
     if ( i == Hstep ) { 
@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
   printf("#Vario dt per osservare l'andamento di C/Co - 1\n");
   
   /****ricalcolo il moto fino a 10.t variando il dt****/
-  for (c.dt=1.; c.dt>=0.0001; c.dt/=10.) {
+  for (c.dt=1.; c.dt>=0.0001; c.dt-=0.00001) {
     tmax = 10.;
     steps = (long int)(tmax/c.dt);
     p.x = x0;

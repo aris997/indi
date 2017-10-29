@@ -42,3 +42,49 @@ unset multiplot
 
 
 set noxtics //fa sparire tutta la griglia verticale e i numeri su essa
+
+
+
+
+
+
+
+set terminal postscript enhanced color
+set output "traiettoria_xyp11.ps"
+set grid
+unset key
+set size square
+unset border
+set title "Traiettoria sul Piano"
+set xlabel "x"
+set ylabel "y"
+plot 'output.dat' u 2:3 w l lt rgb "red"
+
+
+
+
+set terminal postscript enhanced color
+set output "C_pp11.ps"
+set grid
+unset key
+set xrange [0:1000]
+set format y '%.12l'
+set size square
+unset border
+set title "Grafico C su tempo"
+set xlabel 'tempo [s]'
+set ylabel 'C'
+plot 'cost.dat' u 1:2 w l lt rgb 'red'
+
+set terminal postscript enhanced color
+set output "CCo_pp11.ps"
+set grid
+unset key
+set xrange [0:1000]
+set format y '%.2l'
+set size square
+unset border
+set title "Grafico C/Co - 1 su tempo"
+set xlabel 'tempo [s]'
+set ylabel 'C/Co - 1'
+plot 'cost.dat' u 1:3 w l lt rgb 'red'

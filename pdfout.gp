@@ -1,12 +1,12 @@
 set terminal postscript enhanced color
-set output "traiettoria_xyp11.ps"
+set output "Cdt1001_pp11.ps"
 set grid
-unset key
-set size square
+set key
+set logscale xy
 unset border
-set title "Traiettoria sul Piano"
-set xlabel "x"
-set ylabel "y"
-plot 'output.dat' u 2:3 w l lt rgb "red"
-
-set output ""
+set multiplot
+set title "Errore di integrazione al variare di dt"
+set xlabel 'dt'
+set ylabel 'C/Co - 1'
+plot 'costantedt01.dat' w l lt rgb 'red'
+replot 'costantedt10.dat' w lp lt rgb 'blue'
