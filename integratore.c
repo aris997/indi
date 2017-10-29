@@ -100,7 +100,7 @@ int main () {
 
       pold = strcopy(p);
       p = RK4(p, c);
-      fprintf(output, "%lf %.14lf %.14lf %.14lf\n", (double)i*c.dt, p.x, p.y, p.z);
+      //fprintf(output, "%lf %.14lf %.14lf %.14lf\n", (double)i*c.dt, p.x, p.y, p.z);
       
       if ( i == metapassi ) { 
         S = strcopy(p); 
@@ -130,13 +130,13 @@ int main () {
     for (k=0; k<(passaggi-1); k++) periodosomma += periodo[k+1]-periodo[k];
     periodosomma/=(double)(passaggi-1);
 
-    if (passaggi > 0 && periodosomma > dt*10.) {
+    if (passaggi > 0 && periodosomma > c.dt*2) {
       printf("#periodo rho: %1.4lf \tT %.8lf \tincontri %ld\n", c.rho, periodosomma, passaggi+1);
       fprintf(periodifile,"%.4lf \t%.8lf \t %ld\n", c.rho, periodosomma, passaggi+1);
     }
     
     else {
-      printf("#periodo NON esiste per rho: %lf\n", c.rho);
+      printf("#Asintoto esiste per rho: %lf\n", c.rho);
       fprintf(periodifile, "%.4lf \t0.0 \t0\n", c.rho);
     }
 
