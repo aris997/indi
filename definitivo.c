@@ -112,8 +112,8 @@ int main(int argc, char *argv[]) {
 		p = RK4(p, c);
 		
     fprintf(output, "%.8lf\t%.14lf\t%.14lf\t%.14lf\n", ((double)i+1)*c.dt, p.x, p.y, p.z);
-		//C = log(p.x) - p.x + log(p.y) - p.y + p.z;
-		//fprintf(cost, "%lf %.24lf\n", ((double)i+1)*c.dt, C/Co -1);
+		C = log(p.x) - p.x + log(p.y) - p.y + p.z;
+		fprintf(cost, "%lf %.18lf %.18lf\n", ((double)i+1)*c.dt, C, C/Co - 1);
     //printf("%.14lf %.14lf\n", C, Co);
 
     if ( i == Hstep ) { 
@@ -223,7 +223,7 @@ int main(int argc, char *argv[]) {
               printf("#reallocated dperiod memory\n"); 
             }
             
-            if (k > 1) { 
+            if (k > 1) {
               fprintf(periodo, "%.8lf %.14lf\n", (double)i*c.dt, dperiodo[k-1]-dperiodo[k-2]); 
             }
             
